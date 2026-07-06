@@ -287,7 +287,7 @@
                     {
                         "commands": [
                             {
-                                "text": "systemctl status %param1%",
+                                "text": "systemctl status %param1% --no-pager",
                                 "type": "ssh"
                             }
                         ],
@@ -385,11 +385,11 @@
                     {
                         "commands": [
                             {
-                                "text": "journalctl -u %param1% -f -n 100 --no-pager",
+                                "text": "journalctl -u %param1% -n 100 --no-pager",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Показывает логи службы в реальном времени",
+                        "description": "Показывает последние 100 строк логов службы",
                         "name": "Логи службы (live)",
                         "params": [
                             "Имя службы"
@@ -826,14 +826,15 @@
                     {
                         "commands": [
                             {
-                                "text": "dnf in -y sssd adcli realmd\nrealm discover %param1%\nrealm join -U Administrator %param1%",
+                                "text": "dnf in -y sssd adcli realmd\nrealm discover %param1%\necho \"%param2%\" | realm join -U Administrator %param1%",
                                 "type": "ssh"
                             }
                         ],
                         "description": "Вводит компьютер в домен Active Directory",
                         "name": "Войти в домен AD",
                         "params": [
-                            "Домен (например, example.local)"
+                            "Домен (например, example.local)",
+                            "Пароль Administrator"
                         ],
                         "timeout": 120
                     },
@@ -2384,7 +2385,7 @@
                     {
                         "commands": [
                             {
-                                "text": "cat > /tmp/script_%timestamp%.sh << 'EOF'\n%param1%\nEOF\nchmod +x /tmp/script_%timestamp%.sh\nbash /tmp/script_%timestamp%.sh",
+                                "text": "cat > /tmp/script_%timestamp%.sh <<'__DNOTOOL_SCRIPT_EOF__'\n%param1%\n__DNOTOOL_SCRIPT_EOF__\nchmod +x /tmp/script_%timestamp%.sh\nbash /tmp/script_%timestamp%.sh",
                                 "type": "ssh"
                             }
                         ],
@@ -2533,7 +2534,7 @@
                                         "type": "sftp"
                                     },
                                     {
-                                        "text": "chmod 644 /usr/share/wallpapers/wallpaper.jpg\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $user)/bus plasma-apply-wallpaperimage /usr/share/wallpapers/wallpaper.jpg",
+                                        "text": "chmod 644 /usr/share/wallpapers/wallpaper.jpg\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $user)/bus XAUTHORITY=/home/$user/.Xauthority timeout 15 plasma-apply-wallpaperimage /usr/share/wallpapers/wallpaper.jpg",
                                         "type": "ssh"
                                     }
                                 ],
@@ -2547,7 +2548,7 @@
                             {
                                 "commands": [
                                     {
-                                        "text": "users=$(who | awk '{print $1}' | sort -u)\nfor user in $users; do\n    [ \"$user\" = \"root\" ] && continue\n    sudo -u \"$user\" DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u \"$user\")/bus plasma-apply-wallpaperimage /usr/share/wallpapers/ROSA-dark-default.svg\ndone",
+                                        "text": "users=$(who | awk '{print $1}' | sort -u)\nfor user in $users; do\n    [ \"$user\" = \"root\" ] && continue\n    sudo -u \"$user\" DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u \"$user\")/bus XAUTHORITY=/home/$user/.Xauthority timeout 15 plasma-apply-wallpaperimage /usr/share/wallpapers/ROSA-dark-default.svg\ndone",
                                         "type": "ssh"
                                     }
                                 ],
@@ -2558,7 +2559,7 @@
                             {
                                 "commands": [
                                     {
-                                        "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $user)/bus plasma-apply-wallpaperimage /usr/share/wallpapers/ROSA-dark-default.svg",
+                                        "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $user)/bus XAUTHORITY=/home/$user/.Xauthority timeout 15 plasma-apply-wallpaperimage /usr/share/wallpapers/ROSA-dark-default.svg",
                                         "type": "ssh"
                                     }
                                 ],
@@ -2573,7 +2574,7 @@
                             {
                                 "commands": [
                                     {
-                                        "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 chromium-browser \"ya.ru\" --incognito --fullscreen &",
+                                        "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 chromium-browser \"ya.ru\" --incognito --start-fullscreen 2>/dev/null &\nsleep 2",
                                         "type": "ssh"
                                     }
                                 ],
@@ -2584,7 +2585,7 @@
                             {
                                 "commands": [
                                     {
-                                        "text": "sudo -u $(who | head -n1 | awk '{print $1}') DISPLAY=:0 chromium-browser \"%param1%\" --incognito --fullscreen &",
+                                        "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 chromium-browser \"%param1%\" --incognito --start-fullscreen 2>/dev/null &\nsleep 2",
                                         "type": "ssh"
                                     }
                                 ],
@@ -2598,7 +2599,7 @@
                             {
                                 "commands": [
                                     {
-                                        "text": "user=%param1%\ngrep -q CHROMIUM_USER_FLAGS \"/home/$user/.bash_profile\" && sed -i -r \"s/(CHROMIUM_USER_FLAGS=).*/\\1\\\"--incognito\\\"/\" /home/$user/.bash_profile || echo \"export CHROMIUM_USER_FLAGS=\\\"--incognito\\\"\" >> /home/$user/.bash_profile",
+                                        "text": "user=%param1%\nprofile=\"/home/$user/.bash_profile\"\ntouch \"$profile\"\nif grep -q CHROMIUM_USER_FLAGS \"$profile\"; then\n    sed -i -r 's/(CHROMIUM_USER_FLAGS=).*/\\1\"--incognito\"/' \"$profile\"\nelse\n    echo 'export CHROMIUM_USER_FLAGS=\"--incognito\"' >> \"$profile\"\nfi\necho \"Режим инкогнито включён для пользователя $user\"",
                                         "type": "ssh"
                                     }
                                 ],
@@ -2711,7 +2712,7 @@
                             {
                                 "commands": [
                                     {
-                                        "text": "qdbus org.kde.ksmserver /KSMServer logout 0 0 0",
+                                        "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $user)/bus qdbus org.kde.ksmserver /KSMServer logout 0 0 0",
                                         "type": "ssh"
                                     }
                                 ],
@@ -2772,7 +2773,7 @@
                     {
                         "commands": [
                             {
-                                "text": "systemctl status cups",
+                                "text": "systemctl status cups --no-pager",
                                 "type": "ssh"
                             }
                         ],
@@ -2809,7 +2810,7 @@
                     {
                         "commands": [
                             {
-                                "text": "systemctl status upower",
+                                "text": "systemctl status upower --no-pager",
                                 "type": "ssh"
                             }
                         ],
@@ -3554,7 +3555,7 @@
                     {
                         "commands": [
                             {
-                                "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nlogin=\"%param1%\"\npassword=\"%param2%\"\nsudo -u $user DISPLAY=:0 bash -c \"chromium-browser --start-fullscreen \\\"http://n06.mcko.ru/test/?login=$login&password=$password&template=17664\\\" &\"\nsudo -u $user DISPLAY=:0 bash -c \"xdotool sleep 5 mousemove 650 530 click 1 && xdotool sleep 2 mousemove 200 340 click 1 && xdotool sleep 2 mousemove 630 450 click 1 &\"",
+                                "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nlogin=\"%param1%\"\npassword=\"%param2%\"\nsudo -u $user DISPLAY=:0 chromium-browser \"http://n06.mcko.ru/test/?login=$login&password=$password&template=17664\" --start-fullscreen 2>/dev/null &\nsudo -u $user DISPLAY=:0 bash -c \"xdotool sleep 5 mousemove 650 530 click 1 && xdotool sleep 2 mousemove 200 340 click 1 && xdotool sleep 2 mousemove 630 450 click 1\" 2>/dev/null &\nsleep 3",
                                 "type": "ssh"
                             }
                         ],
@@ -3602,7 +3603,7 @@
                     {
                         "commands": [
                             {
-                                "text": "history -c && history -w",
+                                "text": "user=$(who | head -n1 | awk '{print $1}')\n: > /home/$user/.bash_history\necho \"История команд очищена для пользователя $user\"",
                                 "type": "ssh"
                             }
                         ],
@@ -3627,7 +3628,7 @@
                     {
                         "commands": [
                             {
-                                "text": "#!/bin/bash\n\npy-ini-config set /home/%param1%/.config/kxkbrc Layout DisplayNames АНГ,РУС\npy-ini-config set /home/%param1%/.config/kxkbrc Layout LayoutList us,ru\npy-ini-config set /home/%param1%/.config/kxkbrc Layout VariantList ,\n#loginctl terminate-user %param1%\nsystemctl restart sddm",
+                                "text": "py-ini-config set /home/%param1%/.config/kxkbrc Layout DisplayNames АНГ,РУС\npy-ini-config set /home/%param1%/.config/kxkbrc Layout LayoutList us,ru\npy-ini-config set /home/%param1%/.config/kxkbrc Layout VariantList ,\n#loginctl terminate-user %param1%\nsystemctl restart sddm",
                                 "type": "ssh"
                             }
                         ],
@@ -3782,7 +3783,7 @@
             {
                 "commands": [
                     {
-                        "text": "py-ini-config set /etc/sddm.conf.d/kde_settings.conf Autologin User kiosk && systemctl restart sddm\nsleep 5\nsudo -u kiosk DISPLAY=:0 XAUTHORITY=/home/kiosk/.Xauthority bash -c '\nxdotool key Tab Tab Tab Tab\nxdotool type --delay 40 \"%param1%\"\nxdotool key Return\n'",
+                        "text": "py-ini-config set /etc/sddm.conf.d/kde_settings.conf Autologin User kiosk && systemctl restart sddm\nsleep 5\nsudo -u kiosk DISPLAY=:0 XAUTHORITY=/home/kiosk/.Xauthority SITE=\"%param1%\" bash -c '\nxdotool key Tab Tab Tab Tab\nxdotool type --delay 40 \"$SITE\"\nxdotool key Return\n'",
                         "type": "ssh"
                     }
                 ],
@@ -3826,7 +3827,7 @@
             {
                 "commands": [
                     {
-                        "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\n\nuser=$(who | grep '(:0)' | awk '{print $1}')\n\necho \"Пользователь: $user\"\necho \"Сайт: %param1%\"\n\nsudo -u \"$user\" DISPLAY=:0 XAUTHORITY=/home/$user/.Xauthority bash -c '\n# получить размер экрана\nread W H <<< $(xdotool getdisplaygeometry)\n\n# клик в центр экрана\nxdotool mousemove $((W/2)) $((H/2)) click 1\n\n# 4 раза Tab\nxdotool key Tab Tab Tab Tab\n\n# ввод текста\nxdotool type --delay 40 \"%param1%\"\n\n# Enter\nxdotool key Return\n'\n",
+                        "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u \"$user\" DISPLAY=:0 SITE=\"%param1%\" bash -c '\nread W H <<< $(xdotool getdisplaygeometry)\nxdotool mousemove $((W/2)) $((H/2)) click 1\nxdotool key Tab Tab Tab Tab\nxdotool type --delay 40 \"$SITE\"\nxdotool key Return\n'\n",
                         "type": "ssh"
                     }
                 ],
@@ -3840,7 +3841,7 @@
             {
                 "commands": [
                     {
-                        "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\n\nuser=$(who | grep '(:0)' | awk '{print $1}')\n\nsudo -u \"$user\" DISPLAY=:0 XAUTHORITY=/home/$user/.Xauthority bash -c '\n# получить размер экрана\nread W H <<< $(xdotool getdisplaygeometry)\n\n# клик в центр экрана\nxdotool mousemove $((W/2)) $((H/2)) click 1\n\n# Tab\nxdotool key Tab\n\n# ввод логина\nxdotool type --delay 40 \"%param1%\"\n# Tab\nxdotool key Tab\n# ввод пароля\nxdotool type --delay 40 \"%param2%\"\n\n# Enter\nxdotool key Return\n\nxdotool sleep 2\n\nxdotool key Tab Return\n'\n",
+                        "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u \"$user\" DISPLAY=:0 LOGIN=\"%param1%\" PASSWORD=\"%param2%\" bash -c '\nread W H <<< $(xdotool getdisplaygeometry)\nxdotool mousemove $((W/2)) $((H/2)) click 1\nxdotool key Tab\nxdotool type --delay 40 \"$LOGIN\"\nxdotool key Tab\nxdotool type --delay 40 \"$PASSWORD\"\nxdotool key Return\nxdotool sleep 2\nxdotool key Tab Return\n'\n",
                         "type": "ssh"
                     }
                 ],
