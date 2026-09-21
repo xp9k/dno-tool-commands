@@ -1588,14 +1588,22 @@
                             {
                                 "commands": [
                                     {
-                                        "text": "sed -i 's/#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && systemctl restart sshd",
+                                        "text": "sudo bash -c 'echo \"root\" > /etc/ssh/denyusers'",
+                                        "type": "ssh"
+                                    },
+                                    {
+                                        "text": "sed -i 's/#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config",
+                                        "type": "ssh"
+                                    },
+                                    {
+                                        "text": "systemctl restart sshd",
                                         "type": "ssh"
                                     }
                                 ],
                                 "description": "Разрешить вход root по SSH",
                                 "iid": "3a870f3e438c4a709f9fadcc877f2796",
                                 "name": "Разрешить root SSH",
-                                "timeout": 15
+                                "timeout": 30
                             },
                             {
                                 "commands": [
@@ -3470,6 +3478,21 @@
                     {
                         "commands": [
                             {
+                                "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 chromium-browser \"%param1%\" --incognito --start-fullscreen 2>/dev/null &\nsleep 2",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Открывает указанный сайт",
+                        "iid": "9756ed88ebcb49899a10693eaf46dbb8",
+                        "name": "Открыть сайт на весь экран",
+                        "params": [
+                            "URL сайта"
+                        ],
+                        "timeout": 15
+                    },
+                    {
+                        "commands": [
+                            {
                                 "text": "user=%param1%\nprofile=\"/home/$user/.bash_profile\"\ntouch \"$profile\"\nif grep -q CHROMIUM_USER_FLAGS \"$profile\"; then\n    sed -i -r 's/(CHROMIUM_USER_FLAGS=).*/\\1\"--incognito\"/' \"$profile\"\nelse\n    echo 'export CHROMIUM_USER_FLAGS=\"--incognito\"' >> \"$profile\"\nfi\necho \"Режим инкогнито включён для пользователя $user\"",
                                 "type": "ssh"
                             }
@@ -4124,7 +4147,7 @@
                     {
                         "commands": [
                             {
-                                "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nlogin=\"%param1%\"\npassword=\"%param2%\"\nsudo -u $user DISPLAY=:0 chromium-browser \"http://n06.mcko.ru/test/?login=$login&password=$password&template=17664\" --start-fullscreen 2>/dev/null &\nsudo -u $user DISPLAY=:0 bash -c \"xdotool sleep 5 mousemove 650 530 click 1 && xdotool sleep 2 mousemove 200 340 click 1 && xdotool sleep 2 mousemove 630 450 click 1\" 2>/dev/null &\nsleep 3",
+                                "text": "if ! command -v xdotool &> /dev/null; then\ndnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nlogin=\"%param1%\"\npassword=\"%param2%\"\nsudo -u $user DISPLAY=:0 bash -c \"chromium-browser --start-fullscreen \\\"http://n10.mcko.ru/test/?login=$login&password=$password&template=17664\\\" &\"\nsudo -u \"$user\" DISPLAY=:0 bash -c '\n# получить размер экрана\nread W H <<< $(xdotool getdisplaygeometry)\n\n#Ждем, пока загрузится браузер и страница\nxdotool sleep 5\n\n# клик в центр экрана\nxdotool mousemove $((W/2)) $((H/2)) click 1\n\n# Enter\nxdotool key Tab Return\n\nxdotool sleep 3\n\n# клик в центр экрана\nxdotool mousemove $((W/2)) $((H/2)) click 1\n\nxdotool key Tab Return\n'",
                                 "type": "ssh"
                             }
                         ],
@@ -4171,6 +4194,89 @@
         ]
     },
     {
+        "КОМПАС-3D": [
+            {
+                "Диск": [
+                    {
+                        "commands": [
+                            {
+                                "text": "cat > /root/disk_resize.sh <<'DISK_RESIZE_EOF'\n#!/bin/bash\n# Расширение корня / за счёт начала раздела /home (GPT, ext4).\n# При любом сбое после точки невозврата — автоматический откат к исходному состоянию.\n# Запуск: bash disk_resize.sh <ГБ>\nset -eo pipefail\nexport LC_ALL=C\ncd /\n\nTTY_OUT=\"\"\nlog() { local line=\"[$(date +%Y-%m-%d_%H:%M:%S)] $*\"; echo \"$line\"; if [ -n \"$TTY_OUT\" ] && [ -w \"$TTY_OUT\" ]; then echo \"$line\" > \"$TTY_OUT\" 2>/dev/null || true; fi; }\ntty_show() { if [ -n \"$TTY_OUT\" ] && [ -w \"$TTY_OUT\" ]; then tee -a \"$TTY_OUT\" 2>/dev/null || cat; else cat; fi; }\nconsole_on() {\n    [ -n \"$TTY_OUT\" ] && return 0\n    plymouth quit >/dev/null 2>&1 || true\n    systemctl stop plymouth-quit.service plymouth-start.service getty@tty1.service 2>/dev/null || true\n    chvt 1 2>/dev/null || true\n    printf '\\033[2J\\033[1;1H' > /dev/tty1 2>/dev/null || true\n    if [ -w /dev/tty1 ]; then TTY_OUT=/dev/tty1; else TTY_OUT=\"\"; log \"внимание: /dev/tty1 недоступен — без вывода на экран\"; return 0; fi\n    log \"===================================================\"\n    log \"Расширение корня / за счёт /home — НЕ ВЫКЛЮЧАЙТЕ ПК\"\n    log \"Прогресс ниже, полный лог: /root/resize.log\"\n    log \"===================================================\"\n    return 0\n}\n\nSTAGE=\"checks\"\nROLLBACK_ARMED=0\nRB_CRITICAL=0\nDUMP_BAK=\"\"; BACKUP_FILE=\"\"; OLD_UUID=\"\"; FSTAB_BAK=\"\"\nDISK=\"\"; RNUM=\"\"; HNUM=\"\"; ROOT_PART=\"\"; HOME_PART=\"\"\nROOT_END=\"\"; NEW_END_MIB=\"\"; NEW_P2_SIZE_SEC=\"\"\n\nrollback_full() {\n    trap - ERR\n    set +e\n    log \"=== ОТКАТ: возврат к исходному состоянию ===\"\n    log \"!!! На экране: сбой — возвращаю систему как было, НЕ ВЫКЛЮЧАЙТЕ ПК !!!\"\n    if [ \"$STAGE\" = \"table_written\" ]; then\n        if [ -n \"$DUMP_BAK\" ] && [ -f \"$DUMP_BAK\" ]; then\n            log \"возвращаю таблицу разделов из $DUMP_BAK\"\n            sfdisk --force \"$DISK\" < \"$DUMP_BAK\" >/dev/null 2>&1\n            sync\n            partprobe \"$DISK\" >/dev/null 2>&1\n            sleep 3\n            log \"таблица возвращена\"\n        else\n            log \"внимание: бэкапа таблицы нет — пропускаю шаг\"\n        fi\n    else\n        log \"таблица не менялась — пропускаю шаг\"\n    fi\n    if mountpoint -q /home 2>/dev/null; then\n        log \"/home уже смонтирован — пропускаю\"\n    else\n        if mount \"$HOME_PART\" /home 2>/dev/null; then\n            log \"/home смонтирован обратно\"\n        else\n            log \"/home штатно не монтируется — пересоздаю из архива\"\n            mkfs.ext4 -F -q -L home \"$HOME_PART\" 2>/dev/null\n            tune2fs -U \"$OLD_UUID\" \"$HOME_PART\" 2>/dev/null\n            if mount \"$HOME_PART\" /home 2>/dev/null; then\n                tar -xzf \"$BACKUP_FILE\" -C /home 2>/dev/null\n                log \"данные /home восстановлены из архива\"\n            else\n                log \"КРИТИЧНО: /home не восстанавливается. Бэкапы: $DUMP_BAK $BACKUP_FILE; fstab: /root/fstab.bak-*\"\n                RB_CRITICAL=1\n                echo \"Для восстановления вручную: tar -xzf \\\"$BACKUP_FILE\\\" -C /home\" > /root/ВОССТАНОВИТЕ_ИЗ_АРХИВА.txt 2>/dev/null || true\n            fi\n        fi\n    fi\n    if [ -n \"$FSTAB_BAK\" ] && [ -f \"$FSTAB_BAK\" ]; then\n        cp -a \"$FSTAB_BAK\" /etc/fstab 2>/dev/null\n        log \"fstab возвращён из $FSTAB_BAK\"\n    else\n        log \"fstab не менялся — пропускаю\"\n    fi\n    systemctl start display-manager.service sddm.service gdm.service lightdm.service 2>/dev/null\n    systemctl start getty@tty1.service 2>/dev/null || true\n    log \"графика возвращена\"\n    df -h / /home 2>/dev/null | tty_show || true\n    ls /home 2>/dev/null | tty_show || true\n    if [ \"$RB_CRITICAL\" = \"0\" ] && mountpoint -q /home 2>/dev/null && [ -n \"$(ls -A /home 2>/dev/null)\" ]; then\n        log \"чищу архивы бэкапов\"\n        rm -f /root/home-backup-*.tar.gz\n        log \"архивы удалены\"\n    else\n        log \"бэкапы ОСТАВЛЕНЫ (проверьте /home вручную)\"\n    fi\n    log \"ОТКАТ ЗАВЕРШЁН: система в исходном состоянии\"\n    set -e\n}\n\ndie() { log \"ОШИБКА: $*\"; if [ \"$ROLLBACK_ARMED\" = \"1\" ]; then rollback_full; fi; exit 1; }\n\nNEW_GB=\"${1:-%param1%}\"\ncase \"$NEW_GB\" in\n    ''|*[!0-9]*) die \"введите целое число ГБ (например 50)\" ;;\nesac\n[ \"$NEW_GB\" -gt 0 ] || die \"число ГБ должно быть больше 0\"\n[ \"$EUID\" -eq 0 ] || die \"нужен запуск от root\"\n\nlog \"=== Начало: гашу графику, включаю экран ===\"\nROLLBACK_ARMED=1\ntrap 'rollback_full; exit 1' ERR\nsystemctl stop display-manager.service sddm.service gdm.service lightdm.service 2>/dev/null || true\nsleep 3\nfor u in $(loginctl list-users --no-legend 2>/dev/null | awk '{print $2}' || true); do\n    [ \"$u\" = \"root\" ] || { log \"завершаю сеанс $u\"; loginctl terminate-user \"$u\" 2>/dev/null || true; }\ndone\nsleep 2\nconsole_on\nlog \"=== [1/8] Проверки: разделы, геометрия ===\"\nROOT_PART=$(findmnt -no SOURCE /)\nHOME_PART=$(findmnt -no SOURCE /home || true)\n[ -n \"$ROOT_PART\" ] || die \"не найден раздел /\"\n[ -n \"$HOME_PART\" ] || die \"/home не отдельный раздел\"\nlog \"корень=$ROOT_PART home=$HOME_PART\"\n[ \"$(findmnt -no FSTYPE /)\" = \"ext4\" ] || die \"/ не ext4\"\n[ \"$(findmnt -no FSTYPE /home)\" = \"ext4\" ] || die \"/home не ext4\"\n\nparse_partition() {\n    local part=\"$1\"\n    if [[ \"$part\" =~ ^(.*p)([0-9]+)$ ]]; then\n        echo \"${BASH_REMATCH[1]%p} ${BASH_REMATCH[2]}\"\n    elif [[ \"$part\" =~ ^(.*[^0-9])([0-9]+)$ ]]; then\n        echo \"${BASH_REMATCH[1]} ${BASH_REMATCH[2]}\"\n    else\n        return 1\n    fi\n}\nread -r DISK RNUM <<< \"$(parse_partition \"$ROOT_PART\")\" || die \"не разобрал $ROOT_PART\"\nread -r HDISK HNUM <<< \"$(parse_partition \"$HOME_PART\")\" || die \"не разобрал $HOME_PART\"\n[ \"$DISK\" = \"$HDISK\" ] || die \"/ и /home на разных дисках ($DISK vs $HDISK)\"\n[ \"$HNUM\" -eq $((RNUM + 1)) ] || die \"/home (p$HNUM) не сразу за корнем (p$RNUM)\"\nlog \"диск=$DISK корень=p$RNUM home=p$HNUM\"\n\nROOT_END=$(parted -s \"$DISK\" unit MiB print | awk -v n=\"$RNUM\" '$1==n {print $3}' | tr -d 'MiB')\nHOME_START=$(parted -s \"$DISK\" unit MiB print | awk -v n=\"$HNUM\" '$1==n {print $2}' | tr -d 'MiB')\n[ \"$ROOT_END\" = \"$HOME_START\" ] || die \"зазор/пересечение: корень $ROOT_END, home $HOME_START\"\nNEW_END_MIB=$((ROOT_END + NEW_GB * 1024))\nDISK_END=$(parted -s \"$DISK\" unit MiB print | grep \"^Disk \" | awk '{print $3}' | tr -d 'MiB')\n[ -n \"$DISK_END\" ] || die \"не определил размер диска\"\n[ \"$NEW_END_MIB\" -lt \"$DISK_END\" ] || die \"новый конец $NEW_END_MIB выходит за диск $DISK_END\"\nHOME_SIZE_MIB=$(parted -s \"$DISK\" unit MiB print | awk -v n=\"$HNUM\" '$1==n {print $4}' | tr -d 'MiB')\nHOME_DATA_MIB=$(( $(du -sb /home | cut -f1) / 1048576 ))\nNEW_HOME_MIB=$(( HOME_SIZE_MIB - NEW_GB * 1024 ))\nFIT_RESERVE_MIB=5120\nlog \"данных в /home: ${HOME_DATA_MIB} МБ, /home сейчас ${HOME_SIZE_MIB} MiB, после: ${NEW_HOME_MIB} MiB (запас ${FIT_RESERVE_MIB} MiB)\"\n[ \"$HOME_DATA_MIB\" -le $(( NEW_HOME_MIB - FIT_RESERVE_MIB )) ] || die \"данные (${HOME_DATA_MIB} МБ) не влезут в ужатый /home (${NEW_HOME_MIB} MiB минус запас) — уменьшите ГБ или почистите /home\"\nlog \"забираем у /home ${NEW_GB} ГБ: конец корня ${ROOT_END} -> ${NEW_END_MIB} MiB (диск ${DISK_END} MiB)\"\n\nlog \"=== [2/8] Место под бэкап в /root ===\"\n[ -d /root ] || die \"нет каталога /root\"\n[ -w /root ] || die \"/root недоступен для записи\"\nHOME_USAGE_KB=$(du -sk /home | awk '{print $1}')\nROOTFS_FREE_KB=$(df -k /root | tail -1 | awk '{print $4}')\nBACKUP_MARGIN_KB=$(( 2 * 1024 * 1024 ))\nNEEDED_KB=$(( HOME_USAGE_KB + BACKUP_MARGIN_KB ))\nlog \"/home занято $((HOME_USAGE_KB / 1024)) МБ, на ФС /root свободно $((ROOTFS_FREE_KB / 1024)) МБ, нужно $((NEEDED_KB / 1024)) МБ (архив + запас 2 ГБ)\"\n[ \"$ROOTFS_FREE_KB\" -ge \"$NEEDED_KB\" ] || die \"бэкап (~$((NEEDED_KB / 1024)) МБ) не влезет в /root (свободно $((ROOTFS_FREE_KB / 1024)) МБ) — почистите / или разгрузите /home\"\n\nlog \"=== [3/8] Бэкап /home ===\"\nBACKUP_FILE=\"/root/home-backup-$(date +%Y%m%d-%H%M%S).tar.gz\"\nOLD_UUID=$(blkid -s UUID -o value \"$HOME_PART\")\nlog \"UUID /home=$OLD_UUID, архив=$BACKUP_FILE\"\nTAR_RC=0\ntar --exclude='./*/.cache' --totals -czf \"$BACKUP_FILE\" -C /home . 2>&1 | tty_show &\nTAR_PID=$!\nwhile kill -0 \"$TAR_PID\" 2>/dev/null; do\n    sleep 10\n    if [ -f \"$BACKUP_FILE\" ]; then log \"бэкап пишется: $(du -sh \"$BACKUP_FILE\" | cut -f1)\"; fi\ndone\nwait \"$TAR_PID\" || TAR_RC=$?\n[ \"$TAR_RC\" -le 1 ] || die \"tar код $TAR_RC, архив не создан\"\n[ \"$TAR_RC\" -eq 0 ] || log \"внимание: tar код 1 (файлы менялись) — решает проверка ниже\"\ntar -tzf \"$BACKUP_FILE\" > /dev/null || die \"архив $BACKUP_FILE битый\"\nlog \"архив цел: $(du -sh \"$BACKUP_FILE\" | cut -f1)\"\nFSTAB_BAK=\"/root/fstab.bak-$(date +%Y%m%d-%H%M%S)\"\ncp -a /etc/fstab \"$FSTAB_BAK\"\nif grep -q \" /home \" /etc/fstab; then\n    sed -i 's|^\\(UUID=[^ ]*[ ]\\+/home[ ]\\+ext4[ ]\\+\\)defaults|\\1defaults,nofail|' /etc/fstab\n    log \"fstab: $(grep ' /home ' /etc/fstab)\"\nelse\n    log \"внимание: /home нет в fstab\"\nfi\nSTAGE=\"backed_up\"\n\nlog \"=== [4/8] Размонтирование /home (графика погашена в начале) ===\"\nconsole_on\nlog \"дерево монтирований под /home:\"\nfindmnt -R -n -o TARGET,SOURCE,FSTYPE,OPTIONS /home 2>/dev/null || true\nfor m in $(findmnt -R -n -o TARGET /home 2>/dev/null | tail -n +2 | sort -r); do\n    log \"снимаю вложенное: $m\"\n    umount \"$m\" || true\ndone\nlog \"cwd/root внутри /home:\"\nls -l /proc/[0-9]*/cwd /proc/[0-9]*/root 2>/dev/null | grep -E \" /home\" || log \"(таких нет)\"\nUMOUNTED=0\nfor i in 1 2 3; do\n    if umount /home 2>/dev/null; then UMOUNTED=1; break; fi\n    log \"попытка $i: занят, завершаю держателей\"\n    fuser -km /home || true\n    sleep 5\ndone\n[ \"$UMOUNTED\" = \"1\" ] || die \"не размонтировался (диск НЕ тронут)\"\nlog \"/home размонтирован\"\nSTAGE=\"home_umounted\"\n\nlog \"=== [5/8] Переразметка (sfdisk) ===\"\nDUMP_BAK=\"/root/parts.dump-$(date +%Y%m%d-%H%M%S).bak\"\nsfdisk --dump \"$DISK\" > \"$DUMP_BAK\"\nlog \"бэкап таблицы: $DUMP_BAK\"\nROOT_START_SEC=$(grep -E \"^${DISK}(p)?${RNUM} :\" \"$DUMP_BAK\" | sed 's/.*start=[[:space:]]*\\([0-9]*\\).*/\\1/')\nP3TYPE=$(grep -E \"^${DISK}(p)?${HNUM} :\" \"$DUMP_BAK\" | sed -n 's/.*type=\\([^,]*\\).*/\\1/p')\n[ -n \"$ROOT_START_SEC\" ] && [ -n \"$P3TYPE\" ] || die \"не разобрал дамп таблицы\"\nP3NAME=$(grep -E \"^${DISK}(p)?${HNUM} :\" \"$DUMP_BAK\" | sed -n 's/.*name=\"\\([^\"]*\\)\".*/\\1/p')\nif [ -n \"$P3NAME\" ]; then P3NAMEOPT=\", name=\\\"${P3NAME}\\\"\"; else P3NAMEOPT=\"\"; log \"у исходного p${HNUM} нет имени — создаю без имени\"; fi\nLAST_LBA=$(grep '^last-lba:' \"$DUMP_BAK\" | awk '{print $2}' | tr -d ',')\nNEW_P2_SIZE_SEC=$(( NEW_END_MIB * 2048 - ROOT_START_SEC ))\nNEW_P3_START_SEC=$(( NEW_END_MIB * 2048 ))\nNEW_P3_SIZE_SEC=$(( LAST_LBA - NEW_P3_START_SEC + 1 ))\n[ \"$NEW_P3_SIZE_SEC\" -gt 20480 ] || die \"остаток под /home мал ($((NEW_P3_SIZE_SEC / 2048)) MiB)\"\nlog \"p${RNUM}: start=${ROOT_START_SEC} size=${NEW_P2_SIZE_SEC}; p${HNUM}: start=${NEW_P3_START_SEC} size=${NEW_P3_SIZE_SEC}\"\ngrep -v -E \"^${DISK}(p)?${HNUM} :\" \"$DUMP_BAK\" | sed -E \"s|^(${DISK}(p)?${RNUM}[[:space:]]*:[[:space:]]*start=[[:space:]]*[0-9]+,[[:space:]]*size=[[:space:]]*)[0-9]+|\\1${NEW_P2_SIZE_SEC}|\" > /tmp/parts.new\necho \"${HOME_PART} : start=${NEW_P3_START_SEC}, size=${NEW_P3_SIZE_SEC}, type=${P3TYPE}${P3NAMEOPT}\" >> /tmp/parts.new\nlog \"применяемая таблица:\"\ncat /tmp/parts.new | tty_show\nsfdisk --force \"$DISK\" < /tmp/parts.new 2>&1 | tty_show\nsync\nSTAGE=\"table_written\"\n\nlog \"=== [6/8] Перечитывание таблицы ядром ===\"\nkernel_mib() { echo $(( $(blockdev --getsize64 \"$ROOT_PART\") / 1048576 )); }\nEXPECTED_MIB=$((NEW_P2_SIZE_SEC / 2048))\npartprobe \"$DISK\" || true\nsleep 3\nif [ \"$(kernel_mib)\" -lt $((EXPECTED_MIB - 2)) ] || [ \"$(kernel_mib)\" -gt $((EXPECTED_MIB + 2)) ]; then\n    log \"первая попытка не удалась, пробую partx\"\n    partx -u \"$DISK\" || true\n    sleep 3\nfi\nKERN=$(kernel_mib)\nlog \"ядро видит размер p${RNUM}: ${KERN} MiB, ожидалось: ${EXPECTED_MIB} MiB (конец ${NEW_END_MIB} MiB)\"\nif [ \"$KERN\" -lt $((EXPECTED_MIB - 2)) ] || [ \"$KERN\" -gt $((EXPECTED_MIB + 2)) ]; then\n    die \"ядро не перечитало таблицу — откатываюсь к исходному состоянию\"\nfi\n\nlog \"=== [7/8] resize2fs корня ===\"\nresize2fs \"$ROOT_PART\" 2>&1 | tty_show\nlog \"корень расширен: $(df -h / | tail -1)\"\n\nlog \"=== [8/8] Новый /home, возврат данных и графики ===\"\nmkfs.ext4 -F -q -L home \"$HOME_PART\"\ntune2fs -U \"$OLD_UUID\" \"$HOME_PART\"\nmount /home\ntar -xzf \"$BACKUP_FILE\" -C /home 2>&1 | tty_show\nsync\nROLLBACK_ARMED=0\ntrap - ERR\nsystemctl start display-manager.service sddm.service gdm.service lightdm.service 2>/dev/null || true\nsleep 2\nlog \"итог:\"\ndf -h / /home 2>&1 | tty_show\nls /home 2>&1 | tty_show\nif [ -n \"$(ls -A /home)\" ]; then\n    FREED_BEFORE_KB=$(df -k / | tail -1 | awk '{print $4}')\n    rm -f /root/home-backup-*.tar.gz /root/fstab.bak-* /root/parts.dump-*.bak /root/disk_resize.state /tmp/parts.new\n    FREED_AFTER_KB=$(df -k / | tail -1 | awk '{print $4}')\n    log \"бэкапы удалены, освобождено ~$(((FREED_AFTER_KB - FREED_BEFORE_KB) / 1024)) МБ на /\"\nelse\n    log \"внимание: /home пуст — бэкапы ОСТАВЛЯЮ, разберитесь вручную и удалите /root/home-backup-*.tar.gz\"\nfi\nlog \"УСПЕШНО. Перезагружаю для контроля загрузки.\"\nlog \"Экран можно не трогать — ПК перезагрузится сам.\"\nchvt 1 2>/dev/null || true\nsleep 5\nsync\nreboot\nDISK_RESIZE_EOF\nchmod +x /root/disk_resize.sh\nrm -f /root/resize.log\nsetsid nohup bash /root/disk_resize.sh %param1% >>/root/resize.log 2>&1 < /dev/null &\necho \"Запущено в фоне (PID $!). Лог: /root/resize.log, прогресс — на экране ПК (TTY1)\"\necho \"Обрыв SSH безопасен. Финал: успех + автоперезагрузка, либо АВТООТКАТ к исходному.\"\nsleep 3\ntail -n 25 /root/resize.log || true\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Расширяет корень / за счёт начала /home (GPT, ext4). Запуск фоном, лог /root/resize.log, в конце автоперезагрузка. При любом сбое после начала работ — АВТООТКАТ к исходному состоянию (таблица, /home, fstab, графика). Ручных исправлений не требуется. Проверяет влезание данных в ужатый /home; бэкапы удаляет сам. Проверяет влезание бэкапа в /root. Прогресс дублируется на экран ПК. Графика гасится сразу в начале, прогресс бэкапа виден на экране.",
+                        "iid": "b06b4c0098454f39af9174a738727cde",
+                        "name": "Расширить / за счёт /home (фоном, с экраном)",
+                        "params": [
+                            "Сколько ГБ забрать у /home (например 50)"
+                        ],
+                        "timeout": 120
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "LOG=/root/resize.log\nif [ -f \"$LOG\" ]; then cat \"$LOG\"; else echo \"Лога нет — расширение на этом хосте не запускалось.\"; fi\necho \"---\"\ndf -h / /home\nls -lh /root/home-backup-*.tar.gz /root/parts.dump-*.bak 2>/dev/null || echo \"(бэкапов нет)\"",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Показывает хвост /root/resize.log, место на / и /home, наличие бэкапов.",
+                        "iid": "28ee562dc1564c269320317137296d52",
+                        "name": "Просмотр лога расширения",
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "export LC_ALL=C\necho \"=== Занято/свободно ===\"\ndf -h / /home\necho\necho \"=== Устройства и разделы ===\"\nlsblk -o NAME,SIZE,TYPE,FSTYPE,UUID,MOUNTPOINT\necho\necho \"=== Таблица разделов (MiB) ===\"\nfor d in $(lsblk -dn -o NAME,TYPE | awk '$2==\"disk\" {print \"/dev/\"$1}'); do echo \"--- $d ---\"; parted -s \"$d\" unit MiB print free 2>/dev/null | head -20; done",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Показывает занятость /, /home, все диски/разделы и таблицы разделов.",
+                        "iid": "fdce6f4951dc431dabc8027a7d2fa42f",
+                        "name": "Размеры разделов",
+                        "timeout": 30
+                    }
+                ]
+            },
+            {
+                "Установка": [
+                    {
+                        "commands": [
+                            {
+                                "text": "dnf install -y install-kompas-v25",
+                                "type": "ssh"
+                            },
+                            {
+                                "text": "KOMPAS_INSTALL=all install-kompas-v25",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Установка САПР КОМПАС-3D v25 и Просмотрщика из репозитория АСКОН по умолчанию. Требуется лицензия вендора. Пакет install-kompas-v25 после установки не удалять.",
+                        "iid": "b874c060a055475ca7eeb3e30e1db35e",
+                        "name": "Установить КОМПАС-3D v25 (Все)",
+                        "timeout": 3600
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "dnf install -y install-kompas-v25",
+                                "type": "ssh"
+                            },
+                            {
+                                "text": "KOMPAS_INSTALL=study install-kompas-v25",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Установка учебной версии КОМПАС-3D v25 из репозитория АСКОН по умолчанию. Требуется лицензия вендора. Пакет install-kompas-v25 после установки не удалять.",
+                        "iid": "9f7004cadb0842c5bc3681125939e5c0",
+                        "name": "Установить КОМПАС-3D v25 (Учебная)",
+                        "timeout": 3600
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "commands": [
             {
                 "text": "%param1%",
@@ -4183,6 +4289,6 @@
         "params": [
             "Текст команды"
         ],
-        "timeout": 80
+        "timeout": 60
     }
 ]
