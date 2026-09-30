@@ -4163,6 +4163,82 @@
                 ]
             },
             {
+                "Олимпиады": [
+                    {
+                        "commands": [
+                            {
+                                "text": "# ==================== НАСТРОЙКИ (редактируйте здесь) ====================\n# ЧС - сайты, которые ДОЛЖНЫ быть заблокированы\nOLYMP_BLOCKLIST=\"ya.ru vk.com google.com deepseek.com\"\n# БС - сайты тестирующей системы, которые ДОЛЖНЫ открываться\nOLYMP_HOSTS=\"online.olimpiada.ru cheops.olimpiada.ru olympiads.online school.mos.ru login.mos.ru mc.yandex.ru fonts.googleapis.com fonts.gstatic.com\"\n# Белые IP-пулы (Яндекс: поиск, капча, метрика)\nOLYMP_WL4=\"87.250.250.200 77.88.21.14 87.250.250.14 87.250.251.14 93.158.134.14 213.180.193.14 213.180.204.14 37.9.64.225 87.250.251.158 95.163.252.68\"\nOLYMP_WL6=\"2a02:6b8::360 2a02:6b8::14 2a02:6b8:23::225 2a02:6b8::3:158\"\n# Подсеть авторизации МЭШ (school.mos.ru, login.mos.ru)\nOLYMP_MESH_SUBNET=\"94.79.51.0/24\"\n# ========================================================================\n\nOlymp_BACKUP_DIR=\"/root/olymp-backup/$(date +%Y%m%d-%H%M%S)\"\nmkdir -p \"$Olymp_BACKUP_DIR\"\necho \"== Олимпиада: настройка блокировки (ufw) ==\"\nif ! command -v ufw >/dev/null 2>&1; then\necho \"ufw не найден, устанавливаю...\"\nif command -v dnf >/dev/null 2>&1; then\ndnf install -y ufw\nelif command -v apt-get >/dev/null 2>&1; then\napt-get update -qq\napt-get install -y ufw\nfi\nfi\ncommand -v ufw >/dev/null 2>&1 || { echo \"ERROR: ufw отсутствует и установить не удалось\"; exit 1; }\necho \"ufw: $(ufw --version 2>/dev/null | head -n1)\"\nif command -v systemctl >/dev/null 2>&1; then\nif systemctl is-active --quiet firewalld 2>/dev/null; then\necho \"WARNING: firewalld активен одновременно с ufw, возможен конфликт (оставьте один механизм)\"\nfi\nfi\necho \"Бэкап: $Olymp_BACKUP_DIR\"\nif [ -d /etc/ufw ]; then cp -a /etc/ufw \"$Olymp_BACKUP_DIR/ufw-conf\"; fi\nufw status verbose > \"$Olymp_BACKUP_DIR/ufw-status.txt\" 2>&1\nufw status verbose 2>/dev/null | grep -E \"^(Status|Default)\" > \"$Olymp_BACKUP_DIR/defaults.txt\" 2>&1 || true\necho \"--- Применение правил olymp ---\"\nLAN=\"10.0.0.0/8 172.0.0.0/8 192.168.0.0/16\"\nfor net in $LAN; do\nufw allow in from $net to any port 22 proto tcp comment 'olymp ssh' >/dev/null\nufw allow out from any to $net comment 'olymp lan' >/dev/null\nufw allow in from $net comment 'olymp lan' >/dev/null\nufw allow in from $net to any port 11100 proto tcp comment 'olymp veyon' >/dev/null\nufw allow in from $net to any port 11300 proto tcp comment 'olymp veyon' >/dev/null\nufw allow in from $net to any port 11400 proto tcp comment 'olymp veyon' >/dev/null\nufw allow in from $net to any port 5900:5910 proto tcp comment 'olymp vnc' >/dev/null\ndone\nufw allow in on lo comment 'olymp loopback' >/dev/null\nufw allow out on lo comment 'olymp loopback' >/dev/null\nufw allow 53 comment 'olymp dns' >/dev/null\nufw allow out 53 comment 'olymp dns' >/dev/null\nufw allow out 123/udp comment 'olymp ntp' >/dev/null\nufw allow 123/udp comment 'olymp ntp' >/dev/null\nufw allow 67,68/udp comment 'olymp dhcp' >/dev/null\nufw allow out 67,68/udp comment 'olymp dhcp' >/dev/null\nufw allow 546,547/udp comment 'olymp dhcpv6' >/dev/null\nufw allow out 546,547/udp comment 'olymp dhcpv6' >/dev/null\nufw allow 5353/udp comment 'olymp mdns' >/dev/null\nufw allow out 5353/udp comment 'olymp mdns' >/dev/null\necho \"--- Явный запрет сайтов из ЧС ---\"\nfor s in $OLYMP_BLOCKLIST; do\nBIPS=$(getent hosts \"$s\" 2>/dev/null | awk '{print $1}' | sort -u)\nfor ip in $BIPS; do\nufw deny out to $ip comment 'olymp blocklist' >/dev/null\necho \"Запрещен $s: $ip\"\ndone\ndone\necho \"--- Белые IP-пулы ---\"\nfor ip in $OLYMP_WL4; do\nufw allow out to $ip comment 'olymp whitelist' >/dev/null\ndone\nfor ip in $OLYMP_WL6; do\nufw allow out to $ip comment 'olymp whitelist' >/dev/null\ndone\necho \"Резолв зависимых хостов тестирующей системы (несколько проходов, пулы ротируются)...\"\nfor h in $OLYMP_HOSTS; do\nHIPS=\"\"\nfor round in 1 2 3 4 5; do\nRIPS=$(getent hosts \"$h\" 2>/dev/null | awk '{print $1}')\nHIPS=\"$HIPS $RIPS\"\nsleep 1\ndone\nHIPS=$(echo \"$HIPS\" | tr ' ' '\n' | sort -u)\nfor ip in $HIPS; do\nufw allow out to $ip comment 'olymp test-system' >/dev/null\necho \"Разрешен $h: $ip\"\ndone\nif [ -z \"$HIPS\" ]; then echo \"WARNING: $h не резолвится (проверьте DNS)\"; fi\ndone\nufw allow out to $OLYMP_MESH_SUBNET comment 'olymp mes-auth' >/dev/null\necho \"Разрешена подсеть МЭШ $OLYMP_MESH_SUBNET (авторизация school.mos.ru/login.mos.ru)\"\nufw default deny incoming >/dev/null\nufw default deny outgoing >/dev/null\nufw --force enable\necho \"--- Проверка применения ---\"\nNOLY=$(ufw status numbered 2>/dev/null | grep -c olymp || true)\necho \"Применено правил olymp: ${NOLY:-0}\"\nCHK=$(ufw status numbered 2>/dev/null | grep olymp || true)\necho \"$CHK\" | grep -q \"22/tcp\" || echo \"WARNING: нет SSH-правил olymp\"\necho \"$CHK\" | grep -q \" 53\" || echo \"WARNING: нет DNS-правил olymp\"\necho \"$CHK\" | grep -q \"olymp blocklist\" || echo \"WARNING: нет правил ЧС olymp\"\necho \"$CHK\" | grep -q \"87.250.250.200\" || echo \"WARNING: нет whitelist-правил olymp\"\necho \"$CHK\" | grep -q \"10.0.0.0/8\" || echo \"WARNING: нет LAN-правил olymp\"\necho \"$CHK\" | grep -q \"11100\" || echo \"WARNING: нет Veyon-правил olymp\"\necho \"$CHK\" | grep -q \"5900\" || echo \"WARNING: нет VNC-правил olymp\"\necho \"$CHK\" | grep -q \"$OLYMP_MESH_SUBNET\" || echo \"WARNING: нет правила подсети МЭШ olymp\"\necho \"== Готово: запрещены сайты из ЧС, разрешены LAN 10/8, 172/8, 192.168/16, DNS, NTP и тестирующие системы ==\"\nufw status verbose | head -n 30",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Устанавливает ufw (если нет), делает бэкап в /root/olymp-backup, разрешает LAN 10/8, 172/8, 192.168/16, DNS, NTP, Veyon, VNC и тестирующие системы, остальное блокирует",
+                        "iid": "baad0e44fc0b427982921aea6382d0cc",
+                        "name": "Настроить блокировку (ufw)",
+                        "timeout": 300
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "echo \"== Олимпиада: снятие блокировки (ufw) ==\"\ncommand -v ufw >/dev/null 2>&1 || { echo \"ufw не установлен, снимать нечего\"; exit 0; }\nMAP=$(mktemp)\nufw status numbered > \"$MAP\" 2>&1\nNUMS=$(grep -E \"olymp\" \"$MAP\" | grep -oE \"^\\[ *[0-9]+\\]\" | grep -oE \"[0-9]+\" | sort -rn)\nrm -f \"$MAP\"\nFIRST_DIR=$(ls -d /root/olymp-backup/*/ 2>/dev/null | sort | head -n1)\nif [ -z \"$NUMS\" ] && [ -z \"$FIRST_DIR\" ]; then\necho \"Правил olymp не найдено, бэкапов нет - снимать нечего\"\nexit 0\nfi\nfor n in $NUMS; do\necho \"Удаляю правило $n\"\necho \"y\" | ufw delete $n >/dev/null 2>&1 || ufw --force delete $n >/dev/null 2>&1 || true\ndone\necho \"Восстановление исходного состояния (первый бэкап)...\"\nif [ -n \"$FIRST_DIR\" ]; then\nDEF_LINE=$(grep -E \"^Default:\" \"$FIRST_DIR/defaults.txt\" 2>/dev/null | head -n1)\nWAS_ACTIVE=$(grep -E \"^Status:\" \"$FIRST_DIR/ufw-status.txt\" 2>/dev/null | head -n1)\nPREV_IN=$(echo \"$DEF_LINE\" | grep -oE \"[a-z]+ \\(incoming\\)\" | awk '{print $1}')\nPREV_OUT=$(echo \"$DEF_LINE\" | grep -oE \"[a-z]+ \\(outgoing\\)\" | awk '{print $1}')\nif [ -n \"$PREV_IN\" ]; then ufw default \"$PREV_IN\" incoming >/dev/null; else ufw default allow incoming >/dev/null; fi\nif [ -n \"$PREV_OUT\" ]; then ufw default \"$PREV_OUT\" outgoing >/dev/null; else ufw default allow outgoing >/dev/null; fi\necho \"Политики: incoming=${PREV_IN:-allow} outgoing=${PREV_OUT:-allow}\"\nif echo \"$WAS_ACTIVE\" | grep -q \"inactive\"; then\nufw disable >/dev/null 2>&1\necho \"ufw был неактивен до блокировки - отключен обратно\"\nelse\necho \"ufw оставлен включенным (был активен до блокировки)\"\nfi\nrm -rf /root/olymp-backup\necho \"Бэкапы удалены (не копятся)\"\nelse\necho \"WARNING: бэкап не найден, default-политики не тронуты (проверьте вручную)\"\nfi\necho \"== Готово ==\"\nufw status verbose | head -n 15",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Удаляет правила olymp из ufw, восстанавливает исходное состояние из первого бэкапа и удаляет бэкапы",
+                        "iid": "8858b77cc15c4c76a84df5cc35c58029",
+                        "name": "Снять блокировку (ufw)",
+                        "timeout": 60
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "# ==================== НАСТРОЙКИ (редактируйте здесь) ====================\n# ЧС - сайты, которые ДОЛЖНЫ быть заблокированы\nOLYMP_BLOCKLIST=\"ya.ru vk.com google.com\"\n# БС - сайты тестирующей системы, которые ДОЛЖНЫ открываться\nOLYMP_HOSTS=\"online.olimpiada.ru cheops.olimpiada.ru olympiads.online school.mos.ru login.mos.ru mc.yandex.ru fonts.googleapis.com fonts.gstatic.com\"\n# ========================================================================\n\necho \"== Олимпиада: диагностика блокировки ==\"\nif ! command -v ufw >/dev/null 2>&1; then echo \"RESULT: ufw не установлен, блокировка НЕ АКТИВНА\"; exit 0; fi\necho \"ufw: $(ufw status 2>/dev/null | head -n1)\"\nCNT=$(ufw status numbered 2>/dev/null | grep -c olymp || true)\necho \"Правил olymp: $CNT\"\necho \"--- DNS ---\"\nif getent hosts online.olimpiada.ru >/dev/null 2>&1; then echo \"PASS dns: online.olimpiada.ru резолвится\"; else echo \"FAIL dns: online.olimpiada.ru не резолвится\"; fi\necho \"--- Тестирующая система (должна открываться) ---\"\nCODE=$(curl -sS -o /dev/null -w \"%{http_code}\" --max-time 8 https://online.olimpiada.ru 2>&1)\nif echo \"$CODE\" | grep -qE \"^[0-9]{3}$\"; then echo \"PASS site: online.olimpiada.ru отвечает, HTTP $CODE\"; else echo \"FAIL site: online.olimpiada.ru недоступна ($CODE)\"; fi\necho \"--- Зависимые хосты (должны открываться) ---\"\nDEP_FAIL=0\nfor h in $OLYMP_HOSTS; do\nif getent hosts \"$h\" >/dev/null 2>&1; then\nCODE=$(curl -sS -o /dev/null -w \"%{http_code}\" --max-time 8 \"https://$h\" 2>&1)\nif echo \"$CODE\" | grep -qE \"^[0-9]{3}$\"; then echo \"PASS dep: $h отвечает, HTTP $CODE\"; else echo \"FAIL dep: $h недоступен ($CODE)\"; DEP_FAIL=1; fi\nelse\necho \"FAIL dep: $h не резолвится\"\nDEP_FAIL=1\nfi\ndone\nif [ \"$DEP_FAIL\" -ne 0 ]; then echo \"HINT: IP пулов могли смениться - перезапустите команду Настроить блокировку\"; fi\necho \"--- Заблокированные сайты (должны НЕ открываться) ---\"\nfor s in $OLYMP_BLOCKLIST; do\nif curl -sS -o /dev/null --max-time 5 \"https://$s\" >/dev/null 2>&1; then echo \"FAIL block: $s ОТКРЫВАЕТСЯ\"; else echo \"PASS block: $s заблокирован\"; fi\ndone\necho \"--- LAN ---\"\nGW=$(ip route show default 2>/dev/null | awk '{print $3}' | head -n1)\nif [ -n \"$GW\" ]; then\nif ping -c 2 -W 2 \"$GW\" >/dev/null 2>&1; then echo \"PASS ping: шлюз $GW отвечает\"; else echo \"INFO ping: шлюз $GW не отвечает\"; fi\nelse\necho \"INFO ping: шлюз по умолчанию не найден\"\nfi\nif [ \"$CNT\" -gt 0 ] 2>/dev/null; then echo \"RESULT: БЛОКИРОВКА АКТИВНА\"; else echo \"RESULT: блокировка НЕ активна\"; fi",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Проверяет: ufw активен, online.olimpiada.ru и зависимые хосты открываются, ya.ru/vk.com/google.com заблокированы, LAN доступен",
+                        "iid": "6cbaea90ece24e88a24bfb124c894ac5",
+                        "name": "Диагностика блокировки",
+                        "timeout": 120
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "echo \"== Олимпиада: состояние правил ==\"\nif ! command -v ufw >/dev/null 2>&1; then echo \"ufw не установлен\"; exit 0; fi\nufw status verbose\necho \"--- Правила olymp ---\"\nufw status numbered | grep olymp || echo \"(правил olymp нет)\"\necho \"--- Бэкапы ---\"\nls -d /root/olymp-backup/*/ 2>/dev/null || echo \"(бэкапов нет)\"\necho \"--- Сохраненные default-политики ---\"\ntail -n 5 /root/olymp-backup/*/defaults.txt 2>/dev/null || echo \"(нет)\" ",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Выводит ufw status, правила olymp и список бэкапов",
+                        "iid": "63fbacb58fc147559de6336ed080cdbe",
+                        "name": "Показать правила блокировки",
+                        "timeout": 15
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "# Сайт тестирующей системы (БС)\nOLYMP_URL=\"https://online.olimpiada.ru\"\nuser=$(who | head -n1 | awk '{print $1}')\nif [ -z \"$user\" ]; then echo \"ERROR: нет залогиненных пользователей\"; exit 1; fi\nsudo -u $user DISPLAY=:0 chromium-browser \"$OLYMP_URL\" --incognito --start-fullscreen 2>/dev/null &\nsleep 2\necho \"Открыт $OLYMP_URL у пользователя $user\"",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Открывает https://online.olimpiada.ru в Chromium на весь экран от имени залогиненного пользователя",
+                        "iid": "5af4d4e9769247eca04fca3e455014cd",
+                        "name": "Открыть online.olimpiada.ru",
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "echo \"== Олимпиада: аварийный сброс файервола ==\"\ncommand -v ufw >/dev/null 2>&1 || { echo \"ufw не установлен, сбрасывать нечего\"; exit 0; }\nrm -rf /root/olymp-backup\necho \"Бэкапы olymp удалены\"\nufw --force reset\nufw default allow incoming >/dev/null\nufw default allow outgoing >/dev/null\necho \"== Готово: все правила удалены, бэкапы удалены, трафик разрешен, ufw отключен ==\"\nufw status verbose | head -n 5",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Аварийный сброс: удаляет ВСЕ правила ufw, все бэкапы olymp и отключает файервол (открывает весь трафик)",
+                        "iid": "47282608bf184d87b8b891c9898a9a4d",
+                        "name": "Сбросить файервол (аварийный)",
+                        "timeout": 30
+                    }
+                ]
+            },
+            {
                 "Прочее": [
                     {
                         "commands": [
@@ -4190,13 +4266,33 @@
                         "timeout": 30
                     }
                 ]
-            }
-        ]
-    },
-    {
-        "КОМПАС-3D": [
+            },
             {
-                "Диск": [
+                "Диски": [
+                    {
+                        "commands": [
+                            {
+                                "text": "export LC_ALL=C\necho \"=== Занято/свободно ===\"\ndf -h / /home\necho\necho \"=== Устройства и разделы ===\"\nlsblk -o NAME,SIZE,TYPE,FSTYPE,UUID,MOUNTPOINT\necho\necho \"=== Таблица разделов (MiB) ===\"\nfor d in $(lsblk -dn -o NAME,TYPE | awk '$2==\"disk\" {print \"/dev/\"$1}'); do echo \"--- $d ---\"; parted -s \"$d\" unit MiB print free 2>/dev/null | head -20; done",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Показывает занятость /, /home, все диски/разделы и таблицы разделов.",
+                        "iid": "fdce6f4951dc431dabc8027a7d2fa42f",
+                        "name": "Размеры разделов",
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "export LC_ALL=C\necho \"=== Корень / ===\"\nfindmnt -no SOURCE,FSTYPE,SIZE,USED,AVAIL,TARGET / 2>/dev/null || df -h /\necho\necho \"--- df -h / ---\"\ndf -h /\necho\necho \"=== Все разделы: какой сколько занимает ===\"\nlsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT\necho\nROOT_SRC=$(findmnt -no SOURCE / 2>/dev/null)\nFSTYPE=$(findmnt -no FSTYPE / 2>/dev/null)\necho \"Система стоит на $ROOT_SRC, файловая система $FSTYPE\"\n# btrfs приписывает к устройству сабволум (/dev/xxx[/root]) - отрезаем его\nCLEAN=${ROOT_SRC%%\\[*}\nif [ \"$CLEAN\" != \"$ROOT_SRC\" ]; then echo \"Без имени сабволюма это просто $CLEAN\"; fi\nROOT_SRC=$CLEAN\nPK=$(lsblk -no PKNAME \"$ROOT_SRC\" 2>/dev/null)\nPNUM=$(echo \"$ROOT_SRC\" | grep -o '[0-9]*$')\nif [ -z \"$PK\" ] || [ -z \"$PNUM\" ]; then\necho \"Корень стоит не на обычном разделе (похоже на LVM или raid) - эта команда для таких не подойдет.\"\nexit 0\nfi\nDISK=\"/dev/$PK\"\necho \"Дальше смотрим диск $DISK, раздел номер $PNUM\"\necho\necho \"=== Неразмеченное место (MiB) ===\"\nparted -s \"$DISK\" unit MiB print free 2>/dev/null || echo \"parted недоступен\"\necho\necho \"=== Неразмеченное место (GB) ===\"\nparted -s \"$DISK\" unit GB print free 2>/dev/null || true\necho\necho \"=== Итог: можно ли расширить ===\"\nparted -s \"$DISK\" unit MiB print free 2>/dev/null | awk -v p=\"$PNUM\" '\n/Free Space/ {\ns=$1; e=$2; gsub(/MiB/, \"\", s); gsub(/MiB/, \"\", e);\nif (found && s+0 >= root_end) { free=e-s; ok=1; exit }\nnext\n}\n/^ *[0-9]+/ {\nif ($1 == p) { end=$3; gsub(/MiB/, \"\", end); root_end=end+0; found=1 }\nnext\n}\nEND {\nif (!found) { print(\"Итог: не нашел корневой раздел в таблице - посмотри вывод parted выше и разберись вручную.\"); exit }\nif (ok && free+0 >= 100) {\nprintf(\"За корнем свободно %.0f MiB (это примерно %.1f ГБ) - место есть, можно расширять.\\n\", free, free/1024);\nprint(\"Итог: запускай команду расширения - она отдаст все это место под корень.\");\n} else {\nif (ok) printf(\"За корнем виден только крошечный хвостик %.0f MiB - это не место, а погрешность разметки.\\n\", free);\nprint(\"Итог: расширять нечего - все место уже отдано под систему.\");\n}\n}\n'\ncase \"$FSTYPE\" in ext4|btrfs|xfs) echo \"Файловая система $FSTYPE подходит - команда расширения с ней справится.\";; *) echo \"ВНИМАНИЕ: с файловой системой $FSTYPE команда расширения не справится - она умеет только ext4, btrfs и xfs.\"; exit 0;; esac",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Показывает, где стоит система, сколько занимают разделы и есть ли свободное место за корнем. В конце пишет понятный итог: можно ли расширить.",
+                        "iid": "8a5570d130824240af541d0aa40b4bc9",
+                        "name": "Проверить место под расширение /",
+                        "timeout": 30
+                    },
                     {
                         "commands": [
                             {
@@ -4215,6 +4311,18 @@
                     {
                         "commands": [
                             {
+                                "text": "set -eo pipefail\nexport LC_ALL=C\necho \"=== Было ===\"\ndf -h /\nlsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT\nif [ \"$(id -u)\" != \"0\" ]; then echo \"ОШИБКА: запускать нужно от пользователя root\"; exit 1; fi\nfor t in findmnt lsblk parted sfdisk; do command -v $t >/dev/null || { echo \"ОШИБКА: в системе нет утилиты $t\"; exit 1; }; done\nROOT_SRC=$(findmnt -no SOURCE /)\n# btrfs отдает SOURCE с сабволумом (/dev/xxx[/root]) - отрезаем суффикс\nROOT_SRC=${ROOT_SRC%%\\[*}\nFSTYPE=$(findmnt -no FSTYPE /)\necho \"Расширяю корень $ROOT_SRC (файловая система $FSTYPE)\"\ncase \"$FSTYPE\" in\next4) command -v resize2fs >/dev/null || { echo \"ОШИБКА: нет resize2fs\"; exit 1; };;\nbtrfs) command -v btrfs >/dev/null || { echo \"ОШИБКА: нет btrfs\"; exit 1; };;\nxfs) command -v xfs_growfs >/dev/null || { echo \"ОШИБКА: нет xfs_growfs\"; exit 1; };;\n*) echo \"ОШИБКА: с файловой системой $FSTYPE работать не умею - подходят только ext4, btrfs и xfs\"; exit 1;;\nesac\ncase \"$ROOT_SRC\" in /dev/mapper/*|/dev/md*) echo \"ОШИБКА: корень на LVM/raid - эта команда только для обычного раздела\"; exit 1;; esac\nPK=$(lsblk -no PKNAME \"$ROOT_SRC\")\nPNUM=$(echo \"$ROOT_SRC\" | grep -o '[0-9]*$')\nif [ -z \"$PK\" ] || [ -z \"$PNUM\" ]; then echo \"ОШИБКА: не понял, на каком диске находится раздел $ROOT_SRC\"; exit 1; fi\nDISK=\"/dev/$PK\"\necho \"Работаю с диском $DISK, раздел номер $PNUM\"\nFREE=$(parted -s \"$DISK\" unit MiB print free 2>/dev/null | awk -v p=\"$PNUM\" '/Free Space/{s=$1;e=$2;gsub(/MiB/,\"\",s);gsub(/MiB/,\"\",e);if(f&&s+0>=root){printf \"%.0f\",e-s;exit}next} /^ *[0-9]+/{if($1==p){g=$3;gsub(/MiB/,\"\",g);root=g+0;f=1}next}')\necho \"За корнем свободно: ${FREE:-0} MiB\"\nif [ -z \"$FREE\" ] || [ \"$FREE\" -lt 100 ]; then echo \"ОШИБКА: годного места за корнем нет (нужно хотя бы 100 MiB) - расширять нечего, выхожу\"; exit 1; fi\nBAK=\"/root/parts.dump-$(date +%Y%m%d_%H%M).bak\"\nsfdisk --dump \"$DISK\" > \"$BAK\"\necho \"На всякий случай сохранил копию таблицы разделов: $BAK\"\nif ! command -v growpart >/dev/null 2>&1; then\necho \"growpart в системе нет - ставлю...\"\ndnf install -y cloud-utils-growpart 2>&1 | tail -3 || dnf install -y cloud-utils 2>&1 | tail -3 || true\nfi\nif command -v growpart >/dev/null 2>&1; then\ngrowpart \"$DISK\" \"$PNUM\"\nelse\necho \"Поставить growpart не вышло - расширяю раздел через parted\"\nparted -s \"$DISK\" resizepart \"$PNUM\" 100%\nfi\npartprobe \"$DISK\" 2>/dev/null || partx -u \"$DISK\" 2>/dev/null || true\nsleep 2\ncase \"$FSTYPE\" in\next4) resize2fs \"$ROOT_SRC\";;\nbtrfs) btrfs filesystem resize max /;;\nxfs) xfs_growfs /;;\nesac\necho \"=== Стало ===\"\ndf -h /\nlsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT\necho \"ГОТОВО: корень расширен на все свободное место. Копия таблицы разделов лежит здесь: $BAK\"",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Забирает все свободное место за разделом и отдает его корню /. Работает онлайн без перезагрузки, подходит для обычных разделов (ext4, btrfs, xfs) без LVM. Сначала запусти проверку места.",
+                        "iid": "33ec9a509c414802816f63ac4b6e7676",
+                        "name": "Расширить / на все свободное место",
+                        "timeout": 300
+                    },
+                    {
+                        "commands": [
+                            {
                                 "text": "LOG=/root/resize.log\nif [ -f \"$LOG\" ]; then cat \"$LOG\"; else echo \"Лога нет — расширение на этом хосте не запускалось.\"; fi\necho \"---\"\ndf -h / /home\nls -lh /root/home-backup-*.tar.gz /root/parts.dump-*.bak 2>/dev/null || echo \"(бэкапов нет)\"",
                                 "type": "ssh"
                             }
@@ -4223,23 +4331,11 @@
                         "iid": "28ee562dc1564c269320317137296d52",
                         "name": "Просмотр лога расширения",
                         "timeout": 30
-                    },
-                    {
-                        "commands": [
-                            {
-                                "text": "export LC_ALL=C\necho \"=== Занято/свободно ===\"\ndf -h / /home\necho\necho \"=== Устройства и разделы ===\"\nlsblk -o NAME,SIZE,TYPE,FSTYPE,UUID,MOUNTPOINT\necho\necho \"=== Таблица разделов (MiB) ===\"\nfor d in $(lsblk -dn -o NAME,TYPE | awk '$2==\"disk\" {print \"/dev/\"$1}'); do echo \"--- $d ---\"; parted -s \"$d\" unit MiB print free 2>/dev/null | head -20; done",
-                                "type": "ssh"
-                            }
-                        ],
-                        "description": "Показывает занятость /, /home, все диски/разделы и таблицы разделов.",
-                        "iid": "fdce6f4951dc431dabc8027a7d2fa42f",
-                        "name": "Размеры разделов",
-                        "timeout": 30
                     }
                 ]
             },
             {
-                "Установка": [
+                "КОМПАС-3D": [
                     {
                         "commands": [
                             {
