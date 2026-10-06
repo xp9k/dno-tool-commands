@@ -1188,6 +1188,54 @@
                                     "Логин"
                                 ],
                                 "timeout": 30
+                            },
+                            {
+                                "commands": [
+                                    {
+                                        "text": "bash -c '[ -n \"$0\" ] && [ -n \"$1\" ] || { echo \"Ошибка: пароли не должны быть пустыми\"; exit 1; }; printf \"%s:%s\\n\" \"root\" \"$0\" | chpasswd' '%param1%' '%param2%'",
+                                        "type": "ssh"
+                                    },
+                                    {
+                                        "text": "bash -c 'cp -a /etc/ssh/sshd_config /etc/ssh/sshd_config.bak-$(date +%Y%m%d_%H%M%S); sed -i -E -e \"s|^[[:space:]]*#?[[:space:]]*PermitRootLogin\\b.*|PermitRootLogin yes|I\" -e t -e \"\\$aPermitRootLogin yes\" /etc/ssh/sshd_config; sed -i -E -e \"s|^[[:space:]]*#?[[:space:]]*PasswordAuthentication\\b.*|PasswordAuthentication yes|I\" -e t -e \"\\$aPasswordAuthentication yes\" /etc/ssh/sshd_config; echo \"SSH-опции root включены\"'",
+                                        "type": "ssh"
+                                    },
+                                    {
+                                        "text": "bash -c 'sed -i -E \"/^[[:space:]]*DenyUsers[[:space:]]/I s/[[:space:]]+root([[:space:]]|$)/\\1/g\" /etc/ssh/sshd_config; sed -i -E \"/^[[:space:]]*DenyUsers[[:space:]]*$/Id\" /etc/ssh/sshd_config; echo \"DenyUsers в sshd_config очищен от root\"'",
+                                        "type": "ssh"
+                                    },
+                                    {
+                                        "text": "bash -c 'if [ -f /etc/ssh/denyusers ]; then sed -i \"/^root$/d\" /etc/ssh/denyusers; sed -i -E \"s/(^|[[:space:]])root([[:space:]]|$)/\\1\\2/g\" /etc/ssh/denyusers; sed -i \"/^[[:space:]]*$/d\" /etc/ssh/denyusers; echo \"Файл /etc/ssh/denyusers очищен от root\"; fi; if grep -qiE \"^[[:space:]]*AllowUsers\\b\" /etc/ssh/sshd_config; then if ! grep -qiE \"^[[:space:]]*AllowUsers\\b.*(^|[[:space:]])root([[:space:]]|$)\" /etc/ssh/sshd_config; then sed -i -E \"/^[[:space:]]*AllowUsers\\b/I s/$/ root/\" /etc/ssh/sshd_config; echo \"root добавлен в AllowUsers\"; fi; fi'",
+                                        "type": "ssh"
+                                    },
+                                    {
+                                        "text": "sshd -t",
+                                        "type": "ssh"
+                                    },
+                                    {
+                                        "text": "bash -c 'systemctl restart sshd 2>/dev/null || service sshd restart || exit 1; echo \"sshd перезапущен\"; sshd -T 2>/dev/null | grep -Ei \"permitrootlogin|passwordauthentication|denyusers|allowusers\" || true'",
+                                        "type": "ssh"
+                                    },
+                                    {
+                                        "text": "bash -c 'id localadmin &>/dev/null || useradd -m -s /bin/bash localadmin || exit 1; printf \"%s:%s\\n\" \"localadmin\" \"$0\" | chpasswd || exit 1; usermod -aG wheel localadmin; id localadmin' '%param2%'",
+                                        "type": "ssh"
+                                    },
+                                    {
+                                        "text": "bash -c 'id teacher &>/dev/null || { echo \"Пользователь teacher не найден\"; exit 1; }; id -nG teacher | tr \" \" \"\\n\" | grep -qx wheel || { echo \"teacher уже не в wheel\"; exit 0; }; gpasswd -d teacher wheel || { GROUPS=$(id -nG teacher | tr \" \" \",\" | sed \"s/,*wheel,*//g; s/^,*//; s/,*$//; s/,,*/,/g\"); if [ -n \"$GROUPS\" ]; then usermod -G \"$GROUPS\" teacher || exit 1; else usermod -G \"\" teacher || exit 1; fi; }; echo \"teacher удален из wheel\"; echo \"Группы teacher: $(id -nG teacher)\"'",
+                                        "type": "ssh"
+                                    },
+                                    {
+                                        "text": "bash -c 'passwd -S root | awk \"{print \\$1, \\$2}\"; passwd -S localadmin | awk \"{print \\$1, \\$2}\"; id -nG teacher'",
+                                        "type": "ssh"
+                                    }
+                                ],
+                                "description": "Первичная настройка свежей системы: доступ root по SSH с новым паролем, создание localadmin в wheel, удаление teacher из wheel. Пароли без символа '. Ввод паролей запрашивается при запуске.",
+                                "iid": "661beacd714b4573ba7ab51cac6bd319",
+                                "name": "Первичная настройка свежей системы",
+                                "params": [
+                                    "Пароль root",
+                                    "Пароль localadmin"
+                                ],
+                                "timeout": 60
                             }
                         ]
                     }
@@ -4367,6 +4415,86 @@
                         "iid": "9f7004cadb0842c5bc3681125939e5c0",
                         "name": "Установить КОМПАС-3D v25 (Учебная)",
                         "timeout": 3600
+                    }
+                ]
+            },
+            {
+                "Сон (KDE Plasma)": [
+                    {
+                        "commands": [
+                            {
+                                "text": "XU=$(loginctl list-sessions --no-legend 2>/dev/null | awk '$4==\"seat0\" {print $3; exit}'); [ -z \"$XU\" ] && XU=$(who | head -n1 | awk '{print $1}'); [ -z \"$XU\" ] && { echo \"ERROR: нет залогиненных пользователей\"; exit 1; }\nHOME_U=$(getent passwd \"$XU\" | cut -d: -f6)\nif [ -f \"$HOME_U/.config/powerdevilrc\" ] || command -v kwriteconfig6 >/dev/null 2>&1; then SCHEMA=6; CFG=\"$HOME_U/.config/powerdevilrc\"; else SCHEMA=5; CFG=\"$HOME_U/.config/powermanagementprofilesrc\"; fi\nif ! command -v py-ini-config >/dev/null 2>&1; then dnf install -y py-ini-config || { echo \"ERROR: нет py-ini-config, установите вручную: dnf install -y py-ini-config\"; exit 1; }; fi\n[ -d \"$HOME_U/.config\" ] || { mkdir -p \"$HOME_U/.config\"; chown \"$XU:$(id -gn \"$XU\")\" \"$HOME_U/.config\"; }\ndnoasuser() { U=\"$1\"; shift; if command -v setpriv >/dev/null 2>&1; then setpriv --reuid=\"$(id -u \"$U\")\" --regid=\"$(id -g \"$U\")\" --init-groups env PATH=\"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin\" HOME=\"$(getent passwd \"$U\" | cut -d: -f6)\" XDG_RUNTIME_DIR=\"/run/user/$(id -u \"$U\")\" DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$(id -u \"$U\")/bus\" \"$@\"; else runuser -u \"$U\" -- env XDG_RUNTIME_DIR=\"/run/user/$(id -u \"$U\")\" DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$(id -u \"$U\")/bus\" \"$@\"; fi; }\nif [ \"$SCHEMA\" = 6 ]; then\nfor P in AC Battery LowBattery; do py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendAction 0 || echo \"WARN: не записалось $P AutoSuspendAction\"; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" LidAction 0 || echo \"WARN: не записалось $P LidAction\"; done\nelse\nfor P in AC Battery LowBattery; do py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" idleTime 0 || echo \"WARN: не записалось $P idleTime\"; py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" suspendType 0 || echo \"WARN: не записалось $P suspendType\"; py-ini-config set -c \"$CFG\" \"$P][HandleButtonEvents\" lidAction 0 || echo \"WARN: не записалось $P lidAction\"; done\nfi\nchown \"$XU:$(id -gn \"$XU\")\" \"$CFG\"\ndnoasuser \"$XU\" qdbus org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement org.kde.Solid.PowerManagement.refreshStatus >/dev/null 2>&1 || true\necho \"Сон KDE запрещен: $XU (Plasma $SCHEMA, $CFG). На запущенной сессии вступит после перелогина.\"",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Отключает уход в сон для залогиненного пользователя KDE Plasma 5/6",
+                        "iid": "d2726d4e141f4d25bf1866c2befc16c5",
+                        "name": "Сон: запретить (KDE)",
+                        "timeout": 60
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "XU=$(loginctl list-sessions --no-legend 2>/dev/null | awk '$4==\"seat0\" {print $3; exit}'); [ -z \"$XU\" ] && XU=$(who | head -n1 | awk '{print $1}'); [ -z \"$XU\" ] && { echo \"ERROR: нет залогиненных пользователей\"; exit 1; }\nHOME_U=$(getent passwd \"$XU\" | cut -d: -f6)\nif [ -f \"$HOME_U/.config/powerdevilrc\" ] || command -v kwriteconfig6 >/dev/null 2>&1; then SCHEMA=6; CFG=\"$HOME_U/.config/powerdevilrc\"; else SCHEMA=5; CFG=\"$HOME_U/.config/powermanagementprofilesrc\"; fi\nif ! command -v py-ini-config >/dev/null 2>&1; then dnf install -y py-ini-config || { echo \"ERROR: нет py-ini-config, установите вручную: dnf install -y py-ini-config\"; exit 1; }; fi\n[ -d \"$HOME_U/.config\" ] || { mkdir -p \"$HOME_U/.config\"; chown \"$XU:$(id -gn \"$XU\")\" \"$HOME_U/.config\"; }\ndnoasuser() { U=\"$1\"; shift; if command -v setpriv >/dev/null 2>&1; then setpriv --reuid=\"$(id -u \"$U\")\" --regid=\"$(id -g \"$U\")\" --init-groups env PATH=\"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin\" HOME=\"$(getent passwd \"$U\" | cut -d: -f6)\" XDG_RUNTIME_DIR=\"/run/user/$(id -u \"$U\")\" DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$(id -u \"$U\")/bus\" \"$@\"; else runuser -u \"$U\" -- env XDG_RUNTIME_DIR=\"/run/user/$(id -u \"$U\")\" DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$(id -u \"$U\")/bus\" \"$@\"; fi; }\nif [ \"$SCHEMA\" = 6 ]; then\nfor P in AC Battery LowBattery; do case \"$P\" in AC) T=900;; Battery) T=600;; *) T=300;; esac; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendAction 1 || echo \"WARN: не записалось $P AutoSuspendAction\"; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendIdleTimeoutSec \"$T\" || echo \"WARN: не записалось $P AutoSuspendIdleTimeoutSec\"; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" LidAction 1 || echo \"WARN: не записалось $P LidAction\"; done\nelse\nfor P in AC Battery LowBattery; do case \"$P\" in AC) T=900000;; Battery) T=600000;; *) T=300000;; esac; py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" idleTime \"$T\" || echo \"WARN: не записалось $P idleTime\"; py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" suspendType 0 || echo \"WARN: не записалось $P suspendType\"; py-ini-config set -c \"$CFG\" \"$P][HandleButtonEvents\" lidAction 1 || echo \"WARN: не записалось $P lidAction\"; done\nfi\nchown \"$XU:$(id -gn \"$XU\")\" \"$CFG\"\ndnoasuser \"$XU\" qdbus org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement org.kde.Solid.PowerManagement.refreshStatus >/dev/null 2>&1 || true\necho \"Сон KDE разрешен (умолчания): $XU (Plasma $SCHEMA, $CFG). На запущенной сессии вступит после перелогина.\"",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Возвращает уход в сон для залогиненного пользователя KDE Plasma 5/6",
+                        "iid": "3d1b87f7d30d4aec9437253dfd4382a0",
+                        "name": "Сон: разрешить (KDE)",
+                        "timeout": 60
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "XU=$(loginctl list-sessions --no-legend 2>/dev/null | awk '$4==\"seat0\" {print $3; exit}'); [ -z \"$XU\" ] && XU=$(who | head -n1 | awk '{print $1}'); [ -z \"$XU\" ] && { echo \"ERROR: нет залогиненных пользователей\"; exit 1; }\nHOME_U=$(getent passwd \"$XU\" | cut -d: -f6)\nif [ -f \"$HOME_U/.config/powerdevilrc\" ] || command -v kwriteconfig6 >/dev/null 2>&1; then SCHEMA=6; CFG=\"$HOME_U/.config/powerdevilrc\"; else SCHEMA=5; CFG=\"$HOME_U/.config/powermanagementprofilesrc\"; fi\ncommand -v py-ini-config >/dev/null 2>&1 || { echo \"ERROR: нет py-ini-config, установите: dnf install -y py-ini-config\"; exit 1; }\necho \"Пользователь: $XU (Plasma $SCHEMA, файл: $CFG)\"\nif [ ! -f \"$CFG\" ]; then echo \"Файл отсутствует - действуют встроенные умолчания: автовыключение и сон по крышке ВКЛЮЧЕНЫ\"; exit 0; fi\nif [ \"$SCHEMA\" = 6 ]; then\nfor P in AC Battery LowBattery; do A=$(py-ini-config get \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendAction 2>/dev/null) || A=\"\"; T=$(py-ini-config get \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendIdleTimeoutSec 2>/dev/null) || T=\"\"; L=$(py-ini-config get \"$CFG\" \"$P][SuspendAndShutdown\" LidAction 2>/dev/null) || L=\"\"; echo \"[$P] AutoSuspendAction=${A:-(не задано)} AutoSuspendIdleTimeoutSec=${T:-(не задано)} LidAction=${L:-(не задано)}\"; done\nelse\nfor P in AC Battery LowBattery; do I=$(py-ini-config get \"$CFG\" \"$P][SuspendSession\" idleTime 2>/dev/null) || I=\"\"; S=$(py-ini-config get \"$CFG\" \"$P][SuspendSession\" suspendType 2>/dev/null) || S=\"\"; L=$(py-ini-config get \"$CFG\" \"$P][HandleButtonEvents\" lidAction 2>/dev/null) || L=\"\"; echo \"[$P] idleTime=${I:-(не задано)} suspendType=${S:-(не задано)} lidAction=${L:-(не задано)}\"; done\nfi",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Показывает настройки сна KDE залогиненного пользователя",
+                        "iid": "6763fba744e74b3a9e00a6a7cd9fcbd5",
+                        "name": "Сон: статус (KDE)",
+                        "timeout": 30
+                    }
+                ]
+            },
+            {
+                "Сон (система)": [
+                    {
+                        "commands": [
+                            {
+                                "text": "systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target\nmkdir -p /etc/systemd/logind.conf.d\nprintf '[Login]\\nHandleSuspendKey=ignore\\nHandleHibernateKey=ignore\\nHandleLidSwitch=ignore\\nHandleLidSwitchExternalPower=ignore\\nIdleAction=ignore\\n' > /etc/systemd/logind.conf.d/dno-no-sleep.conf\nsystemctl daemon-reload\necho \"Сон запрещен системно (таргеты замаскированы, logind в ignore). Крышка и кнопки применятся после перезагрузки.\"\nsystemctl is-enabled sleep.target suspend.target hibernate.target hybrid-sleep.target || true",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Запрещает сон системно: маскирует sleep-таргеты, logind в ignore",
+                        "iid": "18f9b188df514e1fa3d6d59d51b0f584",
+                        "name": "Сон: запретить (система)",
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "systemctl unmask sleep.target suspend.target hibernate.target hybrid-sleep.target\nrm -f /etc/systemd/logind.conf.d/dno-no-sleep.conf\nsystemctl daemon-reload\necho \"Сон разрешен системно.\"\nsystemctl is-enabled sleep.target suspend.target hibernate.target hybrid-sleep.target || true",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Возвращает сон системно: снимает маски, удаляет запрет logind",
+                        "iid": "1b5a2a24576a463d8c1815f4af097da5",
+                        "name": "Сон: разрешить (система)",
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "echo \"=== Цели сна ===\"\nsystemctl is-enabled sleep.target suspend.target hibernate.target hybrid-sleep.target || true\necho \"--- /etc/systemd/logind.conf.d/dno-no-sleep.conf ---\"\ncat /etc/systemd/logind.conf.d/dno-no-sleep.conf 2>/dev/null || echo \"(файла нет - запрет logind не активен)\"",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Показывает состояние sleep-таргетов и запрета logind",
+                        "iid": "e436cfffd5fc4ae4b2a27e7c72c8e193",
+                        "name": "Сон: статус (система)",
+                        "timeout": 30
                     }
                 ]
             }
