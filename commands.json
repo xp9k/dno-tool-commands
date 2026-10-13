@@ -4172,103 +4172,6 @@
         ]
     },
     {
-        "Kiosk": [
-            {
-                "commands": [
-                    {
-                        "text": "py-ini-config set /etc/sddm.conf Autologin User %param1% && systemctl restart sddm",
-                        "type": "ssh"
-                    }
-                ],
-                "description": "Сменить пользователя",
-                "iid": "3d47e35ed8434702b40723c3df08bd67",
-                "name": "Автологин",
-                "params": [
-                    "Логин"
-                ],
-                "timeout": 30
-            },
-            {
-                "commands": [
-                    {
-                        "text": "py-ini-config set /etc/sddm.conf.d/kde_settings.conf Autologin User kiosk && systemctl restart sddm\nsleep 5\nsudo -u kiosk DISPLAY=:0 XAUTHORITY=/home/kiosk/.Xauthority SITE=\"%param1%\" bash -c '\nxdotool key Tab Tab Tab Tab\nxdotool type --delay 40 \"$SITE\"\nxdotool key Return\n'",
-                        "type": "ssh"
-                    }
-                ],
-                "description": "Загрузиться в Киоск и запустить сайт",
-                "iid": "a2b89fd09b29430c9c78e2adcc03f4ae",
-                "name": "Перелог в киоск и запуск",
-                "params": [
-                    "Сайт"
-                ],
-                "timeout": 30
-            },
-            {
-                "commands": [
-                    {
-                        "text": "wget -O mostech.rpm https://cloud.dit.mos.ru/s/ZsojcJfR2BrgpPj/download/mostech-kiosk-3.1x-60-rosa2021.1.x86_64-full-sch.rpm && sudo dnf install -y mostech.rpm && rm -f mostech.rpm",
-                        "type": "ssh"
-                    }
-                ],
-                "description": "Установка из ссылки ДИТа",
-                "iid": "ebd0c2ebc56340889d85989872e1f57a",
-                "name": "kiosk-install-web",
-                "params": [],
-                "timeout": 1800
-            },
-            {
-                "commands": [
-                    {
-                        "text": ".\\rpm\\%param1%.rpm::%login%@%hostname%:/tmp/%param1%.rpm",
-                        "type": "sftp"
-                    },
-                    {
-                        "text": "rpm -ivh /tmp/%param1%.rpm && rm -f /tmp/%param1%.rpm",
-                        "type": "ssh"
-                    }
-                ],
-                "description": "Загружает RPM файл через SFTP и устанавливает его",
-                "iid": "59038f6c163f4490a25bb86aafe044bb",
-                "name": "kiosk-install-rpm",
-                "params": [
-                    "Имя RPM файла (без .rpm)"
-                ],
-                "timeout": 1800
-            },
-            {
-                "commands": [
-                    {
-                        "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u \"$user\" DISPLAY=:0 SITE=\"%param1%\" bash -c '\nread W H <<< $(xdotool getdisplaygeometry)\nxdotool mousemove $((W/2)) $((H/2)) click 1\nxdotool key Tab Tab Tab Tab\nxdotool type --delay 40 \"$SITE\"\nxdotool key Return\n'\n",
-                        "type": "ssh"
-                    }
-                ],
-                "description": "Запуск сайта для МЦКО",
-                "iid": "2f81b2c72b14454cb03e4c7acf80abd8",
-                "name": "kiosk-run-site",
-                "params": [
-                    "Адрес сайта"
-                ],
-                "timeout": 30
-            },
-            {
-                "commands": [
-                    {
-                        "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u \"$user\" DISPLAY=:0 LOGIN=\"%param1%\" PASSWORD=\"%param2%\" bash -c '\nread W H <<< $(xdotool getdisplaygeometry)\nxdotool mousemove $((W/2)) $((H/2)) click 1\nxdotool key Tab\nxdotool type --delay 40 \"$LOGIN\"\nxdotool key Tab\nxdotool type --delay 40 \"$PASSWORD\"\nxdotool key Return\nxdotool sleep 2\nxdotool key Tab Return\n'\n",
-                        "type": "ssh"
-                    }
-                ],
-                "description": "Запуск сайта для МЦКО",
-                "iid": "cad2be85b270433caa1d4871f024c114",
-                "name": "Нагрузочное (запуск)",
-                "params": [
-                    "Логин",
-                    "Пароль"
-                ],
-                "timeout": 30
-            }
-        ]
-    },
-    {
         "Специальные задачи": [
             {
                 "МЦКО": [
@@ -4508,6 +4411,168 @@
                         "iid": "9f7004cadb0842c5bc3681125939e5c0",
                         "name": "Установить КОМПАС-3D v25 (Учебная)",
                         "timeout": 3600
+                    }
+                ]
+            },
+            {
+                "Kiosk": [
+                    {
+                        "commands": [
+                            {
+                                "text": "py-ini-config set /etc/sddm.conf Autologin User %param1% && systemctl restart sddm",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Сменить пользователя",
+                        "iid": "3d47e35ed8434702b40723c3df08bd67",
+                        "name": "Автологин",
+                        "params": [
+                            "Логин"
+                        ],
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "py-ini-config set /etc/sddm.conf.d/kde_settings.conf Autologin User kiosk && systemctl restart sddm\nsleep 5\nsudo -u kiosk DISPLAY=:0 XAUTHORITY=/home/kiosk/.Xauthority SITE=\"%param1%\" bash -c '\nxdotool key Tab Tab Tab Tab\nxdotool type --delay 40 \"$SITE\"\nxdotool key Return\n'",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Загрузиться в Киоск и запустить сайт",
+                        "iid": "a2b89fd09b29430c9c78e2adcc03f4ae",
+                        "name": "Перелог в киоск и запуск",
+                        "params": [
+                            "Сайт"
+                        ],
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "wget -O mostech.rpm https://cloud.dit.mos.ru/s/ZsojcJfR2BrgpPj/download/mostech-kiosk-3.1x-60-rosa2021.1.x86_64-full-sch.rpm && sudo dnf install -y mostech.rpm && rm -f mostech.rpm",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Установка из ссылки ДИТа",
+                        "iid": "ebd0c2ebc56340889d85989872e1f57a",
+                        "name": "kiosk-install-web",
+                        "params": [],
+                        "timeout": 1800
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": ".\\rpm\\%param1%.rpm::%login%@%hostname%:/tmp/%param1%.rpm",
+                                "type": "sftp"
+                            },
+                            {
+                                "text": "rpm -ivh /tmp/%param1%.rpm && rm -f /tmp/%param1%.rpm",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Загружает RPM файл через SFTP и устанавливает его",
+                        "iid": "59038f6c163f4490a25bb86aafe044bb",
+                        "name": "kiosk-install-rpm",
+                        "params": [
+                            "Имя RPM файла (без .rpm)"
+                        ],
+                        "timeout": 1800
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u \"$user\" DISPLAY=:0 SITE=\"%param1%\" bash -c '\nread W H <<< $(xdotool getdisplaygeometry)\nxdotool mousemove $((W/2)) $((H/2)) click 1\nxdotool key Tab Tab Tab Tab\nxdotool type --delay 40 \"$SITE\"\nxdotool key Return\n'\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Запуск сайта для МЦКО",
+                        "iid": "2f81b2c72b14454cb03e4c7acf80abd8",
+                        "name": "kiosk-run-site",
+                        "params": [
+                            "Адрес сайта"
+                        ],
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u \"$user\" DISPLAY=:0 LOGIN=\"%param1%\" PASSWORD=\"%param2%\" bash -c '\nread W H <<< $(xdotool getdisplaygeometry)\nxdotool mousemove $((W/2)) $((H/2)) click 1\nxdotool key Tab\nxdotool type --delay 40 \"$LOGIN\"\nxdotool key Tab\nxdotool type --delay 40 \"$PASSWORD\"\nxdotool key Return\nxdotool sleep 2\nxdotool key Tab Return\n'\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Запуск сайта для МЦКО",
+                        "iid": "cad2be85b270433caa1d4871f024c114",
+                        "name": "Нагрузочное (запуск)",
+                        "params": [
+                            "Логин",
+                            "Пароль"
+                        ],
+                        "timeout": 30
+                    }
+                ]
+            },
+            {
+                "Kiosk2.0": [
+                    {
+                        "commands": [
+                            {
+                                "text": "dnf --refresh makecache ",
+                                "type": "ssh"
+                            },
+                            {
+                                "text": "dnf in mwts-full -y",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "",
+                        "iid": "3800ee74ab104addb34725f50077b8a3",
+                        "name": "Установка",
+                        "params": [],
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "if ! command -v xdotool &> /dev/null; then\ndnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nsite=\"%param1%\"\nsudo -u $user DISPLAY=:0 bash -c \"mwts-browser \\\"https://$site\\\" &\"",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "",
+                        "iid": "4ad54389a9084bca82490ff761a3df00",
+                        "name": "Открыть сайт",
+                        "params": [
+                            "Адрес сайта"
+                        ],
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "if ! command -v xdotool &>/dev/null; then\n    dnf install -y xdotool\nfi\n\nlogin=\"%param1%\"\npassword=\"%param2%\"\n\nsession=$(\n    loginctl list-sessions --no-legend |\n    awk '$3 != \"gdm\" && $3 != \"\" {print $1; exit}'\n)\n\nif [ -n \"$session\" ]; then\n    user=$(loginctl show-session \"$session\" -p Name --value)\n    display=$(loginctl show-session \"$session\" -p Display --value)\nfi\n\n[ -z \"$user\" ] && user=\"localadmin\"\n[ -z \"$display\" ] && display=\":0\"\n\nuid=$(id -u \"$user\")\n\nurl=\"http://n10.mcko.ru/test/?template=17664\"\n\necho \"Пользователь: $user\"\necho \"Display: $display\"\necho \"Логин теста: $login\"\n\nrm -f /tmp/mwts-browser.log\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XDG_RUNTIME_DIR=\"/run/user/$uid\" \\\n    DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$uid/bus\" \\\n    QTWEBENGINE_CHROMIUM_FLAGS=\"--disable-gpu --disable-gpu-compositing --disable-gpu-rasterization --disable-zero-copy\" \\\n    QT_QUICK_BACKEND=\"software\" \\\n    LIBGL_ALWAYS_SOFTWARE=1 \\\n    setsid mwts-browser \"$url\" \\\n    >/tmp/mwts-browser.log 2>&1 </dev/null &\n\necho \"mwts-browser запущен\"\n\nsleep 3\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XDG_RUNTIME_DIR=\"/run/user/$uid\" \\\n    DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$uid/bus\" \\\n    LOGIN_VALUE=\"$login\" \\\n    PASSWORD_VALUE=\"$password\" \\\n    bash -c '\n        window=$(xdotool getactivewindow 2>/dev/null)\n\n        echo \"Активное окно: $window\"\n\n        if [ -n \"$window\" ]; then\n            echo -n \"Название окна: \"\n            xdotool getwindowname \"$window\" 2>/dev/null || true\n            xdotool windowactivate --sync \"$window\"\n        fi\n\n        read -r W H <<< \"$(xdotool getdisplaygeometry)\"\n\n        X=$((W / 2))\n        Y=$((H / 2))\n\n        echo \"Экран: ${W}x${H}\"\n\n        echo \"Фокус на странице\"\n        xdotool mousemove \"$X\" \"$Y\" click 1\n        sleep 0.5\n\n        echo \"Переход к логину\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.3\n\n        echo \"Ввод логина\"\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$LOGIN_VALUE\"\n\n        echo \"Ввод пароля\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$PASSWORD_VALUE\"\n\n        echo \"Отправка формы\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        sleep 3\n\n        echo \"Подтверждение следующего экрана\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        echo \"Автоматизация завершена\"\n    '\n\necho \"Последние сообщения mwts-browser:\"\n\ngrep -vE \\\n    'dri3 extension not supported|libva error|CreateCommandBuffer' \\\n    /tmp/mwts-browser.log |\ntail -n 10\n\necho \"Готово\"",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "",
+                        "iid": "3dd89a59b0c54407aaaa56f58dd24da6",
+                        "name": "Нагрузочное тестирование",
+                        "params": [
+                            "Логин",
+                            "Пароль"
+                        ],
+                        "timeout": 60
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "dnf rm mwts-full -y",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "",
+                        "iid": "bdf096baab7641f48bb6e30232a6adbf",
+                        "name": "Удаление",
+                        "params": [],
+                        "timeout": 30
                     }
                 ]
             }
