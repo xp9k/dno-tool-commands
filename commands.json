@@ -4528,16 +4528,16 @@
                         "iid": "3800ee74ab104addb34725f50077b8a3",
                         "name": "Установка",
                         "params": [],
-                        "timeout": 30
+                        "timeout": 600
                     },
                     {
                         "commands": [
                             {
-                                "text": "if ! command -v xdotool &> /dev/null; then\ndnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nsite=\"%param1%\"\nsudo -u $user DISPLAY=:0 bash -c \"mwts-browser \\\"https://$site\\\" &\"",
+                                "text": "session=$(\n    loginctl list-sessions --no-legend |\n    awk '$3 != \"gdm\" && $3 != \"\" {print $1; exit}'\n)\n\nif [ -n \"$session\" ]; then\n    user=$(loginctl show-session \"$session\" -p Name --value)\n    display=$(loginctl show-session \"$session\" -p Display --value)\n    authority=\"/home/$user/.Xauthority\"\nfi\n\n[ -z \"$user\" ] && user=\"localadmin\"\n[ -z \"$display\" ] && display=\":0\"\n\nsite=\"%param1%\"\nsudo -u $user DISPLAY=:0 XAUTHORITY=$authority bash -c \"mwts-browser \\\"https://$site\\\" > /dev/null 2>&1 &\"",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "",
+                        "description": "Открыть произвольный сайт",
                         "iid": "4ad54389a9084bca82490ff761a3df00",
                         "name": "Открыть сайт",
                         "params": [
@@ -4548,18 +4548,61 @@
                     {
                         "commands": [
                             {
-                                "text": "if ! command -v xdotool &>/dev/null; then\n    dnf install -y xdotool\nfi\n\nlogin=\"%param1%\"\npassword=\"%param2%\"\n\nsession=$(\n    loginctl list-sessions --no-legend |\n    awk '$3 != \"gdm\" && $3 != \"\" {print $1; exit}'\n)\n\nif [ -n \"$session\" ]; then\n    user=$(loginctl show-session \"$session\" -p Name --value)\n    display=$(loginctl show-session \"$session\" -p Display --value)\nfi\n\n[ -z \"$user\" ] && user=\"localadmin\"\n[ -z \"$display\" ] && display=\":0\"\n\nuid=$(id -u \"$user\")\n\nurl=\"http://n10.mcko.ru/test/?template=17664\"\n\necho \"Пользователь: $user\"\necho \"Display: $display\"\necho \"Логин теста: $login\"\n\nrm -f /tmp/mwts-browser.log\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XDG_RUNTIME_DIR=\"/run/user/$uid\" \\\n    DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$uid/bus\" \\\n    QTWEBENGINE_CHROMIUM_FLAGS=\"--disable-gpu --disable-gpu-compositing --disable-gpu-rasterization --disable-zero-copy\" \\\n    QT_QUICK_BACKEND=\"software\" \\\n    LIBGL_ALWAYS_SOFTWARE=1 \\\n    setsid mwts-browser \"$url\" \\\n    >/tmp/mwts-browser.log 2>&1 </dev/null &\n\necho \"mwts-browser запущен\"\n\nsleep 3\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XDG_RUNTIME_DIR=\"/run/user/$uid\" \\\n    DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$uid/bus\" \\\n    LOGIN_VALUE=\"$login\" \\\n    PASSWORD_VALUE=\"$password\" \\\n    bash -c '\n        window=$(xdotool getactivewindow 2>/dev/null)\n\n        echo \"Активное окно: $window\"\n\n        if [ -n \"$window\" ]; then\n            echo -n \"Название окна: \"\n            xdotool getwindowname \"$window\" 2>/dev/null || true\n            xdotool windowactivate --sync \"$window\"\n        fi\n\n        read -r W H <<< \"$(xdotool getdisplaygeometry)\"\n\n        X=$((W / 2))\n        Y=$((H / 2))\n\n        echo \"Экран: ${W}x${H}\"\n\n        echo \"Фокус на странице\"\n        xdotool mousemove \"$X\" \"$Y\" click 1\n        sleep 0.5\n\n        echo \"Переход к логину\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.3\n\n        echo \"Ввод логина\"\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$LOGIN_VALUE\"\n\n        echo \"Ввод пароля\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$PASSWORD_VALUE\"\n\n        echo \"Отправка формы\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        sleep 3\n\n        echo \"Подтверждение следующего экрана\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        echo \"Автоматизация завершена\"\n    '\n\necho \"Последние сообщения mwts-browser:\"\n\ngrep -vE \\\n    'dri3 extension not supported|libva error|CreateCommandBuffer' \\\n    /tmp/mwts-browser.log |\ntail -n 10\n\necho \"Готово\"",
+                                "text": "if ! command -v xdotool &>/dev/null; then\n    dnf install -y xdotool\nfi\n\ndomain=\"%param1%\"\nlogin=\"%param2%\"\npassword=\"%param3%\"\n\nsession=$(\n    loginctl list-sessions --no-legend |\n    awk '$3 != \"gdm\" && $3 != \"\" {print $1; exit}'\n)\n\nif [ -n \"$session\" ]; then\n    user=$(loginctl show-session \"$session\" -p Name --value)\n    display=$(loginctl show-session \"$session\" -p Display --value)\n    authority=\"/home/$user/.Xauthority\"\nfi\n\n[ -z \"$user\" ] && user=\"localadmin\"\n[ -z \"$display\" ] && display=\":0\"\n\nuid=$(id -u \"$user\")\n\nurl=\"http://$domain.mcko.ru/test/?template=17664\"\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    mwts-browser \"$url\" > /dev/null 2>&1 &\n\nsleep 5\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XAUTHORITY=$authority \\\n    LOGIN_VALUE=\"$login\" \\\n    PASSWORD_VALUE=\"$password\" \\\n    bash -c '\n        window=$(xdotool getactivewindow 2>/dev/null)\n\n        if [ -n \"$window\" ]; then\n            xdotool getwindowname \"$window\" 2>/dev/null || true\n            xdotool windowactivate --sync \"$window\"\n        fi\n\n        read -r W H <<< \"$(xdotool getdisplaygeometry)\"\n\n        X=$((W / 2))\n        Y=$((H / 4))\n\n        xdotool mousemove \"$X\" \"$Y\" click 1\n        sleep 0.5\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.3\n\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$LOGIN_VALUE\"\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$PASSWORD_VALUE\"\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        sleep 3\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n    '",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Открыть сайт для Нагрузочного тестирования",
+                        "iid": "bef3d78b9b7c4f95bb07c6bcda8ab0d3",
+                        "name": "Нагрузочное тестирование",
+                        "params": [
+                            "Домен (без mcko.ru)",
+                            "Логин",
+                            "Пароль"
+                        ],
+                        "timeout": 60
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "if ! command -v xdotool &>/dev/null; then\n    dnf install -y xdotool\nfi\n\ndomain=\"diagXXX\"\nlogin=\"YYYY\"\npassword=\"ZZZZZZ\"\n\nsession=$(\n    loginctl list-sessions --no-legend |\n    awk '$3 != \"gdm\" && $3 != \"\" {print $1; exit}'\n)\n\nif [ -n \"$session\" ]; then\n    user=$(loginctl show-session \"$session\" -p Name --value)\n    display=$(loginctl show-session \"$session\" -p Display --value)\n    authority=\"/home/$user/.Xauthority\"\nfi\n\n[ -z \"$user\" ] && user=\"localadmin\"\n[ -z \"$display\" ] && display=\":0\"\n\nuid=$(id -u \"$user\")\n\nurl=\"http://$domain.mcko.ru/test/?template=17664\"\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XAUTHORITY=$authority \\\n    mwts-browser \"$url\" > /dev/null 2>&1 &\n\nsleep 5\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XAUTHORITY=$authority \\\n    LOGIN_VALUE=\"$login\" \\\n    PASSWORD_VALUE=\"$password\" \\\n    bash -c '\n        window=$(xdotool getactivewindow 2>/dev/null)\n\n        if [ -n \"$window\" ]; then\n            xdotool getwindowname \"$window\" 2>/dev/null || true\n            xdotool windowactivate --sync \"$window\"\n        fi\n\n        read -r W H <<< \"$(xdotool getdisplaygeometry)\"\n\n        X=$((W / 2))\n        Y=$((H / 4))\n\n        xdotool mousemove \"$X\" \"$Y\" click 1\n        sleep 0.5\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.3\n\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$LOGIN_VALUE\"\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$PASSWORD_VALUE\"\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        sleep 3\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n    '",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "ЗАМЕНИТЬ ДАННЫЕ ДЛЯ ВХОДА НА СВОИ",
+                        "iid": "36240e92aa0f40e0966603d8339192b5",
+                        "name": "Нагрузочное-авто",
+                        "params": [],
+                        "timeout": 60
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "if ! command -v xdotool &>/dev/null; then\n    dnf install -y xdotool\nfi\n\ndomain=\"diag010\"\nlogin=\"%param1%\"\npassword=\"%param2%\"\n\nsession=$(\n    loginctl list-sessions --no-legend |\n    awk '$3 != \"gdm\" && $3 != \"\" {print $1; exit}'\n)\n\nif [ -n \"$session\" ]; then\n    user=$(loginctl show-session \"$session\" -p Name --value)\n    display=$(loginctl show-session \"$session\" -p Display --value)\n    authority=\"/home/$user/.Xauthority\"\nfi\n\n[ -z \"$user\" ] && user=\"localadmin\"\n[ -z \"$display\" ] && display=\":0\"\n\nuid=$(id -u \"$user\")\n\nurl=\"http://$domain.mcko.ru/test/?template=17664\"\n\necho \"Пользователь: $user\"\necho \"Display: $display\"\necho \"Логин теста: $login\"\n\nrm -f /tmp/mwts-browser.log\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XAUTHORITY=$authority \\\n    XDG_RUNTIME_DIR=\"/run/user/$uid\" \\\n    DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$uid/bus\" \\\n    QTWEBENGINE_CHROMIUM_FLAGS=\"--disable-gpu --disable-gpu-compositing --disable-gpu-rasterization --disable-zero-copy\" \\\n    QT_QUICK_BACKEND=\"software\" \\\n    LIBGL_ALWAYS_SOFTWARE=1 \\\n    setsid mwts-browser \"$url\" \\\n    >/tmp/mwts-browser.log 2>&1 </dev/null &\n\necho \"mwts-browser запущен\"\n\nsleep 3\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XAUTHORITY=$authority \\\n    XDG_RUNTIME_DIR=\"/run/user/$uid\" \\\n    DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$uid/bus\" \\\n    LOGIN_VALUE=\"$login\" \\\n    PASSWORD_VALUE=\"$password\" \\\n    bash -c '\n        window=$(xdotool getactivewindow 2>/dev/null)\n\n        echo \"Активное окно: $window\"\n\n        if [ -n \"$window\" ]; then\n            echo -n \"Название окна: \"\n            xdotool getwindowname \"$window\" 2>/dev/null || true\n            xdotool windowactivate --sync \"$window\"\n        fi\n\n        read -r W H <<< \"$(xdotool getdisplaygeometry)\"\n\n        X=$((W / 2))\n        Y=$((H / 4))\n\n        echo \"Экран: ${W}x${H}\"\n\n        echo \"Фокус на странице\"\n        xdotool mousemove \"$X\" \"$Y\" click 1\n        sleep 0.5\n\n        echo \"Переход к логину\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.3\n\n        echo \"Ввод логина\"\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$LOGIN_VALUE\"\n\n        echo \"Ввод пароля\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$PASSWORD_VALUE\"\n\n        echo \"Отправка формы\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        sleep 3\n\n        echo \"Подтверждение следующего экрана\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        echo \"Автоматизация завершена\"\n    '\n\necho \"Последние сообщения mwts-browser:\"\n\ngrep -vE \\\n    'dri3 extension not supported|libva error|CreateCommandBuffer' \\\n    /tmp/mwts-browser.log |\ntail -n 10\n\necho \"Готово\"",
                                 "type": "ssh"
                             }
                         ],
                         "description": "",
                         "iid": "3dd89a59b0c54407aaaa56f58dd24da6",
-                        "name": "Нагрузочное тестирование",
+                        "name": "Нагрузочное тестирование (Дебаг)",
                         "params": [
                             "Логин",
                             "Пароль"
                         ],
                         "timeout": 60
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "pkill mwts-browser",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "",
+                        "iid": "a010ade7c8af49bcacc5bf5ba24e65b9",
+                        "name": "Убить браузер",
+                        "params": [],
+                        "timeout": 30
                     },
                     {
                         "commands": [
@@ -4571,6 +4614,19 @@
                         "description": "",
                         "iid": "bdf096baab7641f48bb6e30232a6adbf",
                         "name": "Удаление",
+                        "params": [],
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "nft flush ruleset\nrm -rf /etc/nftables/mwts-armed-nftable.conf\ntruncate -s 0 /etc/sysconfig/nftables.conf\nsystemctl restart nftables",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "",
+                        "iid": "cfc031d75a924b92b43586be77281064",
+                        "name": "Снести правила",
                         "params": [],
                         "timeout": 30
                     }
