@@ -3456,16 +3456,19 @@
                                 "type": "sftp"
                             },
                             {
-                                "text": "chmod 644 /usr/share/wallpapers/wallpaper.jpg\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $user)/bus XAUTHORITY=/home/$user/.Xauthority timeout 15 plasma-apply-wallpaperimage /usr/share/wallpapers/wallpaper.jpg",
+                                "text": "chmod 644 /usr/share/wallpapers/wallpaper.jpg\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "timeout 15 plasma-apply-wallpaperimage \"/usr/share/wallpapers/wallpaper.jpg\"\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Загружает и устанавливает свои обои",
+                        "description": "Загружает и устанавливает свои обои\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
                         "iid": "a2945251754548b3baefe58c810d1907",
                         "name": "Установить свои обои",
-                        "params": [
-                            "Имя пользователя"
-                        ],
+                        "params": [],
                         "timeout": 60
                     },
                     {
@@ -3475,7 +3478,7 @@
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Устанавливает обои всем пользователям",
+                        "description": "Устанавливает обои всем пользователям\n\nСоседний автоматический вариант: «Обои текущего пользователя (автоопределение пользователя)».",
                         "iid": "3c8cb3ee6391436fbdc824464785633f",
                         "name": "Обои для всех",
                         "timeout": 30
@@ -3483,11 +3486,25 @@
                     {
                         "commands": [
                             {
-                                "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $user)/bus XAUTHORITY=/home/$user/.Xauthority timeout 15 plasma-apply-wallpaperimage /usr/share/wallpapers/ROSA-dark-default.svg",
+                                "desktop_session": true,
+                                "text": "timeout 15 plasma-apply-wallpaperimage \"/usr/share/wallpapers/ROSA-dark-default.svg\"\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Устанавливает обои по умолчанию",
+                        "description": "Устанавливает обои всем пользователям\n\nУстанавливает обои только владельцу выбранного сеанса. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
+                        "iid": "997d68615bf84d4cb7e761ebe53d194d",
+                        "name": "Обои текущего пользователя (автоопределение пользователя)",
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "desktop_session": true,
+                                "text": "timeout 15 plasma-apply-wallpaperimage \"/usr/share/wallpapers/ROSA-dark-default.svg\"\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Устанавливает обои по умолчанию\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
                         "iid": "68e53dc2026a42e4bacdcb92830dca02",
                         "name": "Установить обои",
                         "timeout": 15
@@ -3499,11 +3516,18 @@
                     {
                         "commands": [
                             {
-                                "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 chromium-browser \"ya.ru\" --incognito --start-fullscreen 2>/dev/null &\nsleep 2",
+                                "background": true,
+                                "desktop_session": true,
+                                "text": "chromium-browser \"ya.ru\" --incognito --start-fullscreen\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "sleep 2\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Открывает ya.ru в Chromium",
+                        "description": "Открывает ya.ru в Chromium\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.\n\nБраузер запускается отдельным SSH-шагом с флагом «Запустить и не ждать» (background: true); задержки и последующая автоматизация выполняются с ожиданием завершения.",
                         "iid": "9646d714565d49e688207cb1f52f4aca",
                         "name": "Открыть ya.ru",
                         "timeout": 10
@@ -3511,11 +3535,18 @@
                     {
                         "commands": [
                             {
-                                "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 chromium-browser \"%param1%\" --incognito --start-fullscreen 2>/dev/null &\nsleep 2",
+                                "background": true,
+                                "desktop_session": true,
+                                "text": "chromium-browser \"%param1%\" --incognito --start-fullscreen\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "sleep 2\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Открывает указанный сайт",
+                        "description": "Открывает указанный сайт\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.\n\nБраузер запускается отдельным SSH-шагом с флагом «Запустить и не ждать» (background: true); задержки и последующая автоматизация выполняются с ожиданием завершения.",
                         "iid": "9756ed88ebcb49899a10693eaf46dbb8",
                         "name": "Открыть сайт",
                         "params": [
@@ -3526,11 +3557,18 @@
                     {
                         "commands": [
                             {
-                                "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 chromium-browser \"%param1%\" --incognito --start-fullscreen 2>/dev/null &\nsleep 2",
+                                "background": true,
+                                "desktop_session": true,
+                                "text": "chromium-browser \"%param1%\" --incognito --start-fullscreen\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "sleep 2\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Открывает указанный сайт",
+                        "description": "Открывает указанный сайт\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.\n\nБраузер запускается отдельным SSH-шагом с флагом «Запустить и не ждать» (background: true); задержки и последующая автоматизация выполняются с ожиданием завершения.",
                         "iid": "3f2977b497da425ebe31a1f9bb3f7992",
                         "name": "Открыть сайт на весь экран",
                         "params": [
@@ -3545,12 +3583,26 @@
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Включает режим инкогнито для пользователя",
+                        "description": "Включает режим инкогнито для пользователя\n\nСоседний автоматический вариант: «Chromium инкогнито (автоопределение пользователя)».",
                         "iid": "94ecc9e3f6114efc97d94c3cc706d2db",
                         "name": "Chromium инкогнито",
                         "params": [
                             "Имя пользователя"
                         ],
+                        "timeout": 15
+                    },
+                    {
+                        "commands": [
+                            {
+                                "desktop_session": true,
+                                "text": "profile=\"$HOME/.bash_profile\"\ntouch \"$profile\"\nif grep -q CHROMIUM_USER_FLAGS \"$profile\"; then\n    sed -i -r 's/(CHROMIUM_USER_FLAGS=).*/\\1\"--incognito\"/' \"$profile\"\nelse\n    echo 'export CHROMIUM_USER_FLAGS=\"--incognito\"' >> \"$profile\"\nfi\necho \"Режим инкогнито включён для пользователя $USER\"\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Включает режим инкогнито для пользователя\n\nВключает режим инкогнито для владельца выбранного сеанса. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
+                        "iid": "d52b0de076c541c6b3bce0705310f2db",
+                        "name": "Chromium инкогнито (автоопределение пользователя)",
+                        "params": [],
                         "timeout": 15
                     },
                     {
@@ -3596,12 +3648,26 @@
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Устанавливает Okular для PDF по умолчанию",
+                        "description": "Устанавливает Okular для PDF по умолчанию\n\nСоседний автоматический вариант: «PDF в Okular (автоопределение пользователя)».",
                         "iid": "fb15ab0dd72a4b11b8ec03b8d713d79f",
                         "name": "PDF в Okular",
                         "params": [
                             "Имя пользователя"
                         ],
+                        "timeout": 15
+                    },
+                    {
+                        "commands": [
+                            {
+                                "desktop_session": true,
+                                "text": "py-ini-config set -c -v \"$HOME/.config/mimeapps.list\" \"Added Associations\" \"application/pdf\" \"kde5-okularApplication_pdf.desktop\"\npy-ini-config set -c -v \"$HOME/.config/mimeapps.list\" \"Default Applications\" \"application/pdf\" \"kde5-okularApplication_pdf.desktop\"\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Устанавливает Okular для PDF по умолчанию\n\nУстанавливает ассоциации PDF только для владельца выбранного сеанса. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
+                        "iid": "d0eee3b6372946b687939bbb7124fd25",
+                        "name": "PDF в Okular (автоопределение пользователя)",
+                        "params": [],
                         "timeout": 15
                     },
                     {
@@ -3662,11 +3728,12 @@
                     {
                         "commands": [
                             {
-                                "text": "user=$(who | head -n1 | awk '{print $1}')\nsudo -u $user DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u $user)/bus qdbus org.kde.ksmserver /KSMServer logout 0 0 0",
+                                "desktop_session": true,
+                                "text": "qdbus org.kde.ksmserver /KSMServer logout 0 0 0\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Выход из KDE сессии",
+                        "description": "Выход из KDE сессии\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
                         "iid": "a5e0e2988a8141cfacb5184cb29e7b4f",
                         "name": "Выход из KDE",
                         "timeout": 15
@@ -3682,7 +3749,7 @@
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Добавляет английскую и немецкую раскладки клавиатуры для пользователя",
+                        "description": "Добавляет английскую и немецкую раскладки клавиатуры для пользователя\n\nСоседний автоматический вариант: «Добавление языка (автоопределение пользователя)».",
                         "iid": "badd720008ca4dcaba294af9ed1ac3aa",
                         "name": "Добавление языка",
                         "params": [
@@ -3693,16 +3760,52 @@
                     {
                         "commands": [
                             {
+                                "desktop_session": true,
+                                "text": "set -e\npy-ini-config set \"$HOME/.config/kxkbrc\" Layout DisplayNames АНГ,РУС,НЕМ\npy-ini-config set \"$HOME/.config/kxkbrc\" Layout LayoutList us,ru,de\npy-ini-config set \"$HOME/.config/kxkbrc\" Layout VariantList ,,\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "text": "systemctl restart sddm\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Добавляет английскую и немецкую раскладки клавиатуры для пользователя\n\nИзменяет раскладку владельца выбранного сеанса; последним системным шагом перезапускает SDDM, завершая графические сеансы. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
+                        "iid": "9f8e054e8c6449c0aef106ebbd795dd4",
+                        "name": "Добавление языка (автоопределение пользователя)",
+                        "params": [],
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
                                 "text": "py-ini-config set /home/%param1%/.config/kxkbrc Layout DisplayNames АНГ,РУС\npy-ini-config set /home/%param1%/.config/kxkbrc Layout LayoutList us,ru\npy-ini-config set /home/%param1%/.config/kxkbrc Layout VariantList ,\n#loginctl terminate-user %param1%\nsystemctl restart sddm",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Оставляет только английскую и русскую раскладки клавиатуры",
+                        "description": "Оставляет только английскую и русскую раскладки клавиатуры\n\nСоседний автоматический вариант: «Удаление языка (автоопределение пользователя)».",
                         "iid": "728d076ca5db41c09c91c5eed8b84d0e",
                         "name": "Удаление языка",
                         "params": [
                             "Логин"
                         ],
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "desktop_session": true,
+                                "text": "set -e\npy-ini-config set \"$HOME/.config/kxkbrc\" Layout DisplayNames АНГ,РУС\npy-ini-config set \"$HOME/.config/kxkbrc\" Layout LayoutList us,ru\npy-ini-config set \"$HOME/.config/kxkbrc\" Layout VariantList ,\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "text": "systemctl restart sddm\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Оставляет только английскую и русскую раскладки клавиатуры\n\nИзменяет раскладку владельца выбранного сеанса; последним системным шагом перезапускает SDDM, завершая графические сеансы. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
+                        "iid": "e6970b655d664b63b79ca6cb7363446d",
+                        "name": "Удаление языка (автоопределение пользователя)",
+                        "params": [],
                         "timeout": 30
                     }
                 ]
@@ -3716,7 +3819,7 @@
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Блокирует изменения рабочего стола через chattr +i, защищая от удаления",
+                        "description": "Блокирует изменения рабочего стола через chattr +i, защищая от удаления\n\nТребуются права root для chattr +/-i. Автоматический вариант не добавлен: desktop_session выполняет шаг с правами владельца графического сеанса и не передаёт подтверждённый домашний каталог отдельному root-шагу. Пользователь задаётся явно.",
                         "iid": "abcc4e77b546432a9f5829c899e9ddc7",
                         "name": "Заблокировать рабочий стол",
                         "params": [
@@ -3731,7 +3834,7 @@
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Разблокирует изменения рабочего стола",
+                        "description": "Разблокирует изменения рабочего стола\n\nТребуются права root для chattr +/-i. Автоматический вариант не добавлен: desktop_session выполняет шаг с правами владельца графического сеанса и не передаёт подтверждённый домашний каталог отдельному root-шагу. Пользователь задаётся явно.",
                         "iid": "011adeb025ef48c1bf1c3df8b66a0268",
                         "name": "Разблокировать рабочий стол",
                         "params": [
@@ -3750,9 +3853,22 @@
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Очистка рабочих столов от .py файлов",
+                        "description": "Очистка рабочих столов от .py файлов\n\nСоседний автоматический вариант: «Очистка рабочего стола (автоопределение пользователя)».",
                         "iid": "8ba2957b024347a0a46f070967a55174",
                         "name": "Очистка рабочих столов",
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "desktop_session": true,
+                                "text": "dir=\"$HOME/Рабочий стол\"\nfind \"$dir\" -type f -name \"*.py\" -print -delete 2>/dev/null\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Очистка рабочих столов от .py файлов\n\nУдаляет .py-файлы только с рабочего стола владельца выбранного сеанса. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
+                        "iid": "fa5000507a1e4555beb1652bcf7b7353",
+                        "name": "Очистка рабочего стола (автоопределение пользователя)",
                         "timeout": 30
                     },
                     {
@@ -3762,7 +3878,7 @@
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Просмотр истории команд пользователей",
+                        "description": "Просмотр истории команд пользователей\n\nСоседний автоматический вариант: «История команд (автоопределение пользователя)».",
                         "iid": "721be8127b714710acd8b8c9851cf167",
                         "name": "История команд",
                         "timeout": 30
@@ -3770,11 +3886,25 @@
                     {
                         "commands": [
                             {
-                                "text": "user=$(who | head -n1 | awk '{print $1}')\n: > /home/$user/.bash_history\necho \"История команд очищена для пользователя $user\"",
+                                "desktop_session": true,
+                                "text": "find \"$HOME\" -name \"*.bash_history\" -exec cat {} \\;\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Очистка истории текущего пользователя",
+                        "description": "Просмотр истории команд пользователей\n\nПоказывает файлы истории только в домашнем каталоге владельца выбранного сеанса. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
+                        "iid": "a16077607428482e9fdfa8737eca9d9e",
+                        "name": "История команд (автоопределение пользователя)",
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "desktop_session": true,
+                                "text": ": > \"$HOME/.bash_history\"\necho \"История команд очищена для пользователя $USER\"\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Очистка истории текущего пользователя\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
                         "iid": "647297eca2784fe9beca1bd3cbdd7a99",
                         "name": "Очистка истории",
                         "timeout": 10
@@ -3950,11 +4080,16 @@
                     {
                         "commands": [
                             {
-                                "text": "XU=$(loginctl list-sessions --no-legend 2>/dev/null | awk '$4==\"seat0\" {print $3; exit}'); [ -z \"$XU\" ] && XU=$(who | head -n1 | awk '{print $1}'); [ -z \"$XU\" ] && { echo \"ERROR: нет залогиненных пользователей\"; exit 1; }\nHOME_U=$(getent passwd \"$XU\" | cut -d: -f6)\nif [ -f \"$HOME_U/.config/powerdevilrc\" ] || command -v kwriteconfig6 >/dev/null 2>&1; then SCHEMA=6; CFG=\"$HOME_U/.config/powerdevilrc\"; else SCHEMA=5; CFG=\"$HOME_U/.config/powermanagementprofilesrc\"; fi\nif ! command -v py-ini-config >/dev/null 2>&1; then dnf install -y py-ini-config || { echo \"ERROR: нет py-ini-config, установите вручную: dnf install -y py-ini-config\"; exit 1; }; fi\n[ -d \"$HOME_U/.config\" ] || { mkdir -p \"$HOME_U/.config\"; chown \"$XU:$(id -gn \"$XU\")\" \"$HOME_U/.config\"; }\ndnoasuser() { U=\"$1\"; shift; if command -v setpriv >/dev/null 2>&1; then setpriv --reuid=\"$(id -u \"$U\")\" --regid=\"$(id -g \"$U\")\" --init-groups env PATH=\"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin\" HOME=\"$(getent passwd \"$U\" | cut -d: -f6)\" XDG_RUNTIME_DIR=\"/run/user/$(id -u \"$U\")\" DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$(id -u \"$U\")/bus\" \"$@\"; else runuser -u \"$U\" -- env XDG_RUNTIME_DIR=\"/run/user/$(id -u \"$U\")\" DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$(id -u \"$U\")/bus\" \"$@\"; fi; }\nif [ \"$SCHEMA\" = 6 ]; then\nfor P in AC Battery LowBattery; do py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendAction 0 || echo \"WARN: не записалось $P AutoSuspendAction\"; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" LidAction 0 || echo \"WARN: не записалось $P LidAction\"; done\nelse\nfor P in AC Battery LowBattery; do py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" idleTime 0 || echo \"WARN: не записалось $P idleTime\"; py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" suspendType 0 || echo \"WARN: не записалось $P suspendType\"; py-ini-config set -c \"$CFG\" \"$P][HandleButtonEvents\" lidAction 0 || echo \"WARN: не записалось $P lidAction\"; done\nfi\nchown \"$XU:$(id -gn \"$XU\")\" \"$CFG\"\ndnoasuser \"$XU\" qdbus org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement org.kde.Solid.PowerManagement.refreshStatus >/dev/null 2>&1 || true\necho \"Сон KDE запрещен: $XU (Plasma $SCHEMA, $CFG). На запущенной сессии вступит после перелогина.\"",
+                                "text": "if ! command -v py-ini-config >/dev/null 2>&1; then dnf install -y py-ini-config || { echo \"ERROR: нет py-ini-config, установите вручную: dnf install -y py-ini-config\"; exit 1; }; fi\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "if [ -f \"$HOME/.config/powerdevilrc\" ] || command -v kwriteconfig6 >/dev/null 2>&1; then SCHEMA=6; CFG=\"$HOME/.config/powerdevilrc\"; else SCHEMA=5; CFG=\"$HOME/.config/powermanagementprofilesrc\"; fi\nmkdir -p \"$HOME/.config\"\nif [ \"$SCHEMA\" = 6 ]; then\nfor P in AC Battery LowBattery; do py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendAction 0 || echo \"WARN: не записалось $P AutoSuspendAction\"; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" LidAction 0 || echo \"WARN: не записалось $P LidAction\"; done\nelse\nfor P in AC Battery LowBattery; do py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" idleTime 0 || echo \"WARN: не записалось $P idleTime\"; py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" suspendType 0 || echo \"WARN: не записалось $P suspendType\"; py-ini-config set -c \"$CFG\" \"$P][HandleButtonEvents\" lidAction 0 || echo \"WARN: не записалось $P lidAction\"; done\nfi\nqdbus org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement org.kde.Solid.PowerManagement.refreshStatus >/dev/null 2>&1 || true\necho \"Сон KDE запрещен: $USER (Plasma $SCHEMA, $CFG). На запущенной сессии вступит после перелогина.\"\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Отключает уход в сон для залогиненного пользователя KDE Plasma 5/6",
+                        "description": "Отключает уход в сон для залогиненного пользователя KDE Plasma 5/6\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
                         "iid": "d2726d4e141f4d25bf1866c2befc16c5",
                         "name": "Сон: запретить (KDE)",
                         "timeout": 60
@@ -3962,11 +4097,16 @@
                     {
                         "commands": [
                             {
-                                "text": "XU=$(loginctl list-sessions --no-legend 2>/dev/null | awk '$4==\"seat0\" {print $3; exit}'); [ -z \"$XU\" ] && XU=$(who | head -n1 | awk '{print $1}'); [ -z \"$XU\" ] && { echo \"ERROR: нет залогиненных пользователей\"; exit 1; }\nHOME_U=$(getent passwd \"$XU\" | cut -d: -f6)\nif [ -f \"$HOME_U/.config/powerdevilrc\" ] || command -v kwriteconfig6 >/dev/null 2>&1; then SCHEMA=6; CFG=\"$HOME_U/.config/powerdevilrc\"; else SCHEMA=5; CFG=\"$HOME_U/.config/powermanagementprofilesrc\"; fi\nif ! command -v py-ini-config >/dev/null 2>&1; then dnf install -y py-ini-config || { echo \"ERROR: нет py-ini-config, установите вручную: dnf install -y py-ini-config\"; exit 1; }; fi\n[ -d \"$HOME_U/.config\" ] || { mkdir -p \"$HOME_U/.config\"; chown \"$XU:$(id -gn \"$XU\")\" \"$HOME_U/.config\"; }\ndnoasuser() { U=\"$1\"; shift; if command -v setpriv >/dev/null 2>&1; then setpriv --reuid=\"$(id -u \"$U\")\" --regid=\"$(id -g \"$U\")\" --init-groups env PATH=\"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin\" HOME=\"$(getent passwd \"$U\" | cut -d: -f6)\" XDG_RUNTIME_DIR=\"/run/user/$(id -u \"$U\")\" DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$(id -u \"$U\")/bus\" \"$@\"; else runuser -u \"$U\" -- env XDG_RUNTIME_DIR=\"/run/user/$(id -u \"$U\")\" DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$(id -u \"$U\")/bus\" \"$@\"; fi; }\nif [ \"$SCHEMA\" = 6 ]; then\nfor P in AC Battery LowBattery; do case \"$P\" in AC) T=900;; Battery) T=600;; *) T=300;; esac; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendAction 1 || echo \"WARN: не записалось $P AutoSuspendAction\"; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendIdleTimeoutSec \"$T\" || echo \"WARN: не записалось $P AutoSuspendIdleTimeoutSec\"; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" LidAction 1 || echo \"WARN: не записалось $P LidAction\"; done\nelse\nfor P in AC Battery LowBattery; do case \"$P\" in AC) T=900000;; Battery) T=600000;; *) T=300000;; esac; py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" idleTime \"$T\" || echo \"WARN: не записалось $P idleTime\"; py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" suspendType 0 || echo \"WARN: не записалось $P suspendType\"; py-ini-config set -c \"$CFG\" \"$P][HandleButtonEvents\" lidAction 1 || echo \"WARN: не записалось $P lidAction\"; done\nfi\nchown \"$XU:$(id -gn \"$XU\")\" \"$CFG\"\ndnoasuser \"$XU\" qdbus org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement org.kde.Solid.PowerManagement.refreshStatus >/dev/null 2>&1 || true\necho \"Сон KDE разрешен (умолчания): $XU (Plasma $SCHEMA, $CFG). На запущенной сессии вступит после перелогина.\"",
+                                "text": "if ! command -v py-ini-config >/dev/null 2>&1; then dnf install -y py-ini-config || { echo \"ERROR: нет py-ini-config, установите вручную: dnf install -y py-ini-config\"; exit 1; }; fi\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "if [ -f \"$HOME/.config/powerdevilrc\" ] || command -v kwriteconfig6 >/dev/null 2>&1; then SCHEMA=6; CFG=\"$HOME/.config/powerdevilrc\"; else SCHEMA=5; CFG=\"$HOME/.config/powermanagementprofilesrc\"; fi\nmkdir -p \"$HOME/.config\"\nif [ \"$SCHEMA\" = 6 ]; then\nfor P in AC Battery LowBattery; do case \"$P\" in AC) T=900;; Battery) T=600;; *) T=300;; esac; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendAction 1 || echo \"WARN: не записалось $P AutoSuspendAction\"; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendIdleTimeoutSec \"$T\" || echo \"WARN: не записалось $P AutoSuspendIdleTimeoutSec\"; py-ini-config set -c \"$CFG\" \"$P][SuspendAndShutdown\" LidAction 1 || echo \"WARN: не записалось $P LidAction\"; done\nelse\nfor P in AC Battery LowBattery; do case \"$P\" in AC) T=900000;; Battery) T=600000;; *) T=300000;; esac; py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" idleTime \"$T\" || echo \"WARN: не записалось $P idleTime\"; py-ini-config set -c \"$CFG\" \"$P][SuspendSession\" suspendType 0 || echo \"WARN: не записалось $P suspendType\"; py-ini-config set -c \"$CFG\" \"$P][HandleButtonEvents\" lidAction 1 || echo \"WARN: не записалось $P lidAction\"; done\nfi\nqdbus org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement org.kde.Solid.PowerManagement.refreshStatus >/dev/null 2>&1 || true\necho \"Сон KDE разрешен (умолчания): $USER (Plasma $SCHEMA, $CFG). На запущенной сессии вступит после перелогина.\"\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Возвращает уход в сон для залогиненного пользователя KDE Plasma 5/6",
+                        "description": "Возвращает уход в сон для залогиненного пользователя KDE Plasma 5/6\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
                         "iid": "3d1b87f7d30d4aec9437253dfd4382a0",
                         "name": "Сон: разрешить (KDE)",
                         "timeout": 60
@@ -3974,11 +4114,12 @@
                     {
                         "commands": [
                             {
-                                "text": "XU=$(loginctl list-sessions --no-legend 2>/dev/null | awk '$4==\"seat0\" {print $3; exit}'); [ -z \"$XU\" ] && XU=$(who | head -n1 | awk '{print $1}'); [ -z \"$XU\" ] && { echo \"ERROR: нет залогиненных пользователей\"; exit 1; }\nHOME_U=$(getent passwd \"$XU\" | cut -d: -f6)\nif [ -f \"$HOME_U/.config/powerdevilrc\" ] || command -v kwriteconfig6 >/dev/null 2>&1; then SCHEMA=6; CFG=\"$HOME_U/.config/powerdevilrc\"; else SCHEMA=5; CFG=\"$HOME_U/.config/powermanagementprofilesrc\"; fi\ncommand -v py-ini-config >/dev/null 2>&1 || { echo \"ERROR: нет py-ini-config, установите: dnf install -y py-ini-config\"; exit 1; }\necho \"Пользователь: $XU (Plasma $SCHEMA, файл: $CFG)\"\nif [ ! -f \"$CFG\" ]; then echo \"Файл отсутствует - действуют встроенные умолчания: автовыключение и сон по крышке ВКЛЮЧЕНЫ\"; exit 0; fi\nif [ \"$SCHEMA\" = 6 ]; then\nfor P in AC Battery LowBattery; do A=$(py-ini-config get \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendAction 2>/dev/null) || A=\"\"; T=$(py-ini-config get \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendIdleTimeoutSec 2>/dev/null) || T=\"\"; L=$(py-ini-config get \"$CFG\" \"$P][SuspendAndShutdown\" LidAction 2>/dev/null) || L=\"\"; echo \"[$P] AutoSuspendAction=${A:-(не задано)} AutoSuspendIdleTimeoutSec=${T:-(не задано)} LidAction=${L:-(не задано)}\"; done\nelse\nfor P in AC Battery LowBattery; do I=$(py-ini-config get \"$CFG\" \"$P][SuspendSession\" idleTime 2>/dev/null) || I=\"\"; S=$(py-ini-config get \"$CFG\" \"$P][SuspendSession\" suspendType 2>/dev/null) || S=\"\"; L=$(py-ini-config get \"$CFG\" \"$P][HandleButtonEvents\" lidAction 2>/dev/null) || L=\"\"; echo \"[$P] idleTime=${I:-(не задано)} suspendType=${S:-(не задано)} lidAction=${L:-(не задано)}\"; done\nfi",
+                                "desktop_session": true,
+                                "text": "if [ -f \"$HOME/.config/powerdevilrc\" ] || command -v kwriteconfig6 >/dev/null 2>&1; then SCHEMA=6; CFG=\"$HOME/.config/powerdevilrc\"; else SCHEMA=5; CFG=\"$HOME/.config/powermanagementprofilesrc\"; fi\ncommand -v py-ini-config >/dev/null 2>&1 || { echo \"ERROR: нет py-ini-config, установите: dnf install -y py-ini-config\"; exit 1; }\necho \"Пользователь: $USER (Plasma $SCHEMA, файл: $CFG)\"\nif [ ! -f \"$CFG\" ]; then echo \"Файл отсутствует - действуют встроенные умолчания: автовыключение и сон по крышке ВКЛЮЧЕНЫ\"; exit 0; fi\nif [ \"$SCHEMA\" = 6 ]; then\nfor P in AC Battery LowBattery; do A=$(py-ini-config get \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendAction 2>/dev/null) || A=\"\"; T=$(py-ini-config get \"$CFG\" \"$P][SuspendAndShutdown\" AutoSuspendIdleTimeoutSec 2>/dev/null) || T=\"\"; L=$(py-ini-config get \"$CFG\" \"$P][SuspendAndShutdown\" LidAction 2>/dev/null) || L=\"\"; echo \"[$P] AutoSuspendAction=${A:-(не задано)} AutoSuspendIdleTimeoutSec=${T:-(не задано)} LidAction=${L:-(не задано)}\"; done\nelse\nfor P in AC Battery LowBattery; do I=$(py-ini-config get \"$CFG\" \"$P][SuspendSession\" idleTime 2>/dev/null) || I=\"\"; S=$(py-ini-config get \"$CFG\" \"$P][SuspendSession\" suspendType 2>/dev/null) || S=\"\"; L=$(py-ini-config get \"$CFG\" \"$P][HandleButtonEvents\" lidAction 2>/dev/null) || L=\"\"; echo \"[$P] idleTime=${I:-(не задано)} suspendType=${S:-(не задано)} lidAction=${L:-(не задано)}\"; done\nfi\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Показывает настройки сна KDE залогиненного пользователя",
+                        "description": "Показывает настройки сна KDE залогиненного пользователя\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
                         "iid": "6763fba744e74b3a9e00a6a7cd9fcbd5",
                         "name": "Сон: статус (KDE)",
                         "timeout": 30
@@ -4178,14 +4319,29 @@
                     {
                         "commands": [
                             {
-                                "text": "if ! command -v xdotool &> /dev/null; then\ndnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nlogin=\"%param1%\"\npassword=\"%param2%\"\nsudo -u $user DISPLAY=:0 bash -c \"chromium-browser --start-fullscreen \\\"http://n10.mcko.ru/test/?login=$login&password=$password&template=17664\\\" &\"\nsudo -u \"$user\" DISPLAY=:0 bash -c '\n# получить размер экрана\nread W H <<< $(xdotool getdisplaygeometry)\n\n#Ждем, пока загрузится браузер и страница\nxdotool sleep 5\n\n# клик в центр экрана\nxdotool mousemove $((W/2)) $((H/2)) click 1\n\n# Enter\nxdotool key Tab Return\n\nxdotool sleep 3\n\n# клик в центр экрана\nxdotool mousemove $((W/2)) $((H/2)) click 1\n\nxdotool key Tab Return\n'",
+                                "background": false,
+                                "desktop_session": false,
+                                "text": "# Проверяем, установлена ли утилита управления\nif ! command -v xdotool >/dev/null 2>&1; then\n    dnf install -y xdotool || exit $?\nfi\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "background": true,
+                                "desktop_session": true,
+                                "text": "domain=\"%param1%\"\nlogin=\"%param2%\"\npassword=\"%param3%\"\nchromium-browser --start-fullscreen \"https://$domain.mcko.ru/test/?login=$login&password=$password&template=17664\"\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "background": false,
+                                "desktop_session": true,
+                                "text": "# получить размер экрана\nread W H <<< $(xdotool getdisplaygeometry)\n\n#Ждем, пока загрузится браузер и страница\nxdotool sleep 5\n\n# клик в центр экрана\nxdotool mousemove $((W/2)) $((H/4)) click 1\n\n# Enter\nxdotool key Tab Return\n\nxdotool sleep 3\n\n# клик в центр экрана\nxdotool mousemove $((W/2)) $((H/4)) click 1\n\nxdotool key Tab Return\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Автоматический запуск тестирования МЦКО",
+                        "description": "Запуск нагрузочного тестирования в окружении пользователя через Chromimum",
                         "iid": "5fc7fca4bac5465ab7b2ba58f5a15fe4",
                         "name": "Нагрузочное тестирование МЦКО",
                         "params": [
+                            "Домен (без .mcko.ru)",
                             "Логин",
                             "Пароль"
                         ],
@@ -4194,11 +4350,12 @@
                     {
                         "commands": [
                             {
-                                "text": "user=$(loginctl list-sessions --no-legend 2>/dev/null | awk '$4==\"seat0\" {print $3; exit}')\n[ -z \"$user\" ] && user=$(who | head -n1 | awk '{print $1}')\n[ -z \"$user\" ] && { echo \"ERROR: нет залогиненных пользователей\"; exit 1; }\n\necho \"Пользователь: $user\"\n\nif py-ini-config del \"/home/$user/.config/powermanagementprofilesrc\" \\\n    \"AC][DPMSControl\" idleTime --flush 2>/dev/null; then\n    echo \"Параметр удалён.\"\nelse\n    echo \"Уже настроено (секция или параметр отсутствует).\"\nfi",
+                                "desktop_session": true,
+                                "text": "echo \"Пользователь: $USER\"\n\nif py-ini-config del \"$HOME/.config/powermanagementprofilesrc\" \\\n    \"AC][DPMSControl\" idleTime --flush 2>/dev/null; then\n    echo \"Параметр удалён.\"\nelse\n    echo \"Уже настроено (секция или параметр отсутствует).\"\nfi\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "",
+                        "description": "Автоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
                         "iid": "dc58a057109e4b16aa910e92f02ac981",
                         "name": "Запретить сон",
                         "params": [],
@@ -4211,11 +4368,30 @@
                     {
                         "commands": [
                             {
-                                "text": "# ==================== НАСТРОЙКИ (редактируйте здесь) ====================\n# ЧС - сайты, которые ДОЛЖНЫ быть заблокированы\nOLYMP_BLOCKLIST=\"ya.ru vk.com google.com deepseek.com\"\n# БС - сайты тестирующей системы, которые ДОЛЖНЫ открываться\nOLYMP_HOSTS=\"online.olimpiada.ru cheops.olimpiada.ru olympiads.online school.mos.ru login.mos.ru mc.yandex.ru fonts.googleapis.com fonts.gstatic.com\"\n# Белые IP-пулы (Яндекс: поиск, капча, метрика)\nOLYMP_WL4=\"87.250.250.200 77.88.21.14 87.250.250.14 87.250.251.14 93.158.134.14 213.180.193.14 213.180.204.14 37.9.64.225 87.250.251.158 95.163.252.68\"\nOLYMP_WL6=\"2a02:6b8::360 2a02:6b8::14 2a02:6b8:23::225 2a02:6b8::3:158\"\n# Подсеть авторизации МЭШ (school.mos.ru, login.mos.ru)\nOLYMP_MESH_SUBNET=\"94.79.51.0/24\"\n# Отключение IPv6 (yes - запретить обход ЧС по v6 и таймауты на AAAA)\nOLYMP_DISABLE_IPV6=\"yes\"\n# ========================================================================\n\nOlymp_BACKUP_DIR=\"/root/olymp-backup/$(date +%Y%m%d-%H%M%S)\"\nmkdir -p \"$Olymp_BACKUP_DIR\"\necho \"== Олимпиада: настройка блокировки (ufw) ==\"\nif ! command -v ufw >/dev/null 2>&1; then\necho \"ufw не найден, устанавливаю...\"\nif command -v dnf >/dev/null 2>&1; then\ndnf install -y ufw\nelif command -v apt-get >/dev/null 2>&1; then\napt-get update -qq\napt-get install -y ufw\nfi\nfi\ncommand -v ufw >/dev/null 2>&1 || { echo \"ERROR: ufw отсутствует и установить не удалось\"; exit 1; }\necho \"ufw: $(ufw --version 2>/dev/null | head -n1)\"\nif command -v systemctl >/dev/null 2>&1; then\nif systemctl is-active --quiet firewalld 2>/dev/null; then\necho \"WARNING: firewalld активен одновременно с ufw, возможен конфликт (оставьте один механизм)\"\nfi\nfi\nsysctl -n net.ipv6.conf.all.disable_ipv6 > \"$Olymp_BACKUP_DIR/sysctl-ipv6-all.txt\" 2>&1\nsysctl -n net.ipv6.conf.default.disable_ipv6 > \"$Olymp_BACKUP_DIR/sysctl-ipv6-default.txt\" 2>&1\necho \"Бэкап: $Olymp_BACKUP_DIR\"\nif [ -d /etc/ufw ]; then cp -a /etc/ufw \"$Olymp_BACKUP_DIR/ufw-conf\"; fi\nufw status verbose > \"$Olymp_BACKUP_DIR/ufw-status.txt\" 2>&1\nufw status verbose 2>/dev/null | grep -E \"^(Status|Default)\" > \"$Olymp_BACKUP_DIR/defaults.txt\" 2>&1 || true\nMAP=$(mktemp)\nufw status numbered > \"$MAP\" 2>&1\nOLDN=$(grep -E \"olymp\" \"$MAP\" | grep -oE \"^\\[ *[0-9]+\\]\" | grep -oE \"[0-9]+\" | sort -rn)\nrm -f \"$MAP\"\nif [ -n \"$OLDN\" ]; then\necho \"--- Зачистка старых правил olymp: $(echo \"$OLDN\" | wc -w) шт (повторный запуск не копит дубли) ---\"\nfor n in $OLDN; do\necho \"y\" | ufw delete $n >/dev/null 2>&1 || ufw --force delete $n >/dev/null 2>&1 || true\ndone\nfi\necho \"--- Отключение IPv6 ---\"\nif [ \"$OLYMP_DISABLE_IPV6\" = \"yes\" ]; then\nsysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1\nsysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null 2>&1\nprintf '# Отключение IPv6 (олимпиада)\\nnet.ipv6.conf.all.disable_ipv6 = 1\\nnet.ipv6.conf.default.disable_ipv6 = 1\\n' > /etc/sysctl.d/99-olymp-ipv6.conf\nsysctl --system >/dev/null 2>&1\necho \"IPv6 отключен (persist /etc/sysctl.d/99-olymp-ipv6.conf)\"\nelse\nrm -f /etc/sysctl.d/99-olymp-ipv6.conf\necho \"IPv6 не отключается (OLYMP_DISABLE_IPV6=$OLYMP_DISABLE_IPV6)\"\nfi\necho \"--- Применение правил olymp ---\"\nLAN=\"10.0.0.0/8 172.0.0.0/8 192.168.0.0/16\"\nfor net in $LAN; do\nufw allow in from $net to any port 22 proto tcp comment 'olymp ssh' >/dev/null\nufw allow out from any to $net comment 'olymp lan' >/dev/null\nufw allow in from $net comment 'olymp lan' >/dev/null\nufw allow in from $net to any port 11100 proto tcp comment 'olymp veyon' >/dev/null\nufw allow in from $net to any port 11300 proto tcp comment 'olymp veyon' >/dev/null\nufw allow in from $net to any port 11400 proto tcp comment 'olymp veyon' >/dev/null\nufw allow in from $net to any port 5900:5910 proto tcp comment 'olymp vnc' >/dev/null\ndone\nufw allow in on lo comment 'olymp loopback' >/dev/null\nufw allow out on lo comment 'olymp loopback' >/dev/null\nufw allow 53 comment 'olymp dns' >/dev/null\nufw allow out 53 comment 'olymp dns' >/dev/null\nufw allow out 123/udp comment 'olymp ntp' >/dev/null\nufw allow 123/udp comment 'olymp ntp' >/dev/null\nufw allow 67,68/udp comment 'olymp dhcp' >/dev/null\nufw allow out 67,68/udp comment 'olymp dhcp' >/dev/null\nufw allow 546,547/udp comment 'olymp dhcpv6' >/dev/null\nufw allow out 546,547/udp comment 'olymp dhcpv6' >/dev/null\nufw allow 5353/udp comment 'olymp mdns' >/dev/null\nufw allow out 5353/udp comment 'olymp mdns' >/dev/null\necho \"--- Явный запрет сайтов из ЧС (IPv4 и IPv6) ---\"\nfor s in $OLYMP_BLOCKLIST; do\nBIPS=$( (getent ahostsv4 \"$s\" 2>/dev/null; getent ahostsv6 \"$s\" 2>/dev/null) | awk '{print $1}' | sort -u)\nfor ip in $BIPS; do\nufw deny out to $ip comment 'olymp blocklist' >/dev/null\necho \"Запрещен $s: $ip\"\ndone\nif [ -z \"$BIPS\" ]; then echo \"WARNING: $s не резолвится (проверьте DNS)\"; fi\ndone\necho \"--- Белые IP-пулы ---\"\nfor ip in $OLYMP_WL4; do\nufw allow out to $ip comment 'olymp whitelist' >/dev/null\ndone\nfor ip in $OLYMP_WL6; do\nufw allow out to $ip comment 'olymp whitelist' >/dev/null\ndone\necho \"Резолв зависимых хостов тестирующей системы (несколько проходов, обе семьи адресов)...\"\nfor h in $OLYMP_HOSTS; do\nHIPS=\"\"\nfor round in 1 2 3 4 5; do\nRIPS=$( (getent ahostsv4 \"$h\" 2>/dev/null; getent ahostsv6 \"$h\" 2>/dev/null) | awk '{print $1}')\nHIPS=\"$HIPS $RIPS\"\nsleep 1\ndone\nHIPS=$(echo \"$HIPS\" | tr ' ' '\n' | sort -u)\nfor ip in $HIPS; do\nufw allow out to $ip comment 'olymp test-system' >/dev/null\necho \"Разрешен $h: $ip\"\ndone\nif [ -z \"$HIPS\" ]; then echo \"WARNING: $h не резолвится (проверьте DNS)\"; fi\ndone\nufw allow out to $OLYMP_MESH_SUBNET comment 'olymp mes-auth' >/dev/null\necho \"Разрешена подсеть МЭШ $OLYMP_MESH_SUBNET (авторизация school.mos.ru/login.mos.ru)\"\nufw default deny incoming >/dev/null\nufw default deny outgoing >/dev/null\nufw --force enable\necho \"--- Проверка применения ---\"\nNOLY=$(ufw status numbered 2>/dev/null | grep -c olymp || true)\necho \"Применено правил olymp: ${NOLY:-0}\"\nCHK=$(ufw status numbered 2>/dev/null | grep olymp || true)\necho \"$CHK\" | grep -q \"22/tcp\" || echo \"WARNING: нет SSH-правил olymp\"\necho \"$CHK\" | grep -q \" 53\" || echo \"WARNING: нет DNS-правил olymp\"\necho \"$CHK\" | grep -q \"olymp blocklist\" || echo \"WARNING: нет правил ЧС olymp\"\necho \"$CHK\" | grep \"olymp blocklist\" | grep -q \"(v6)\" || echo \"WARNING: нет v6-правил ЧС olymp\"\necho \"$CHK\" | grep -q \"87.250.250.200\" || echo \"WARNING: нет whitelist-правил olymp\"\necho \"$CHK\" | grep -q \"10.0.0.0/8\" || echo \"WARNING: нет LAN-правил olymp\"\necho \"$CHK\" | grep -q \"11100\" || echo \"WARNING: нет Veyon-правил olymp\"\necho \"$CHK\" | grep -q \"5900\" || echo \"WARNING: нет VNC-правил olymp\"\necho \"$CHK\" | grep -q \"$OLYMP_MESH_SUBNET\" || echo \"WARNING: нет правила подсети МЭШ olymp\"\necho \"disable_ipv6=$(sysctl -n net.ipv6.conf.all.disable_ipv6 2>/dev/null)\"\necho \"== Готово: запрещены сайты из ЧС (v4 и v6), разрешены LAN 10/8, 172/8, 192.168/16, DNS, NTP и тестирующие системы ==\"\nufw status verbose | head -n 30",
+                                "background": true,
+                                "desktop_session": true,
+                                "text": "# Сайт тестирующей системы (БС)\nOLYMP_URL=\"https://online.olimpiada.ru\"\nchromium-browser \"$OLYMP_URL\" --incognito --start-fullscreen\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "OLYMP_URL=\"https://online.olimpiada.ru\"\nsleep 2\necho \"Открыт $OLYMP_URL у пользователя $USER\"\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Устанавливает ufw (если нет), делает бэкап в /root/olymp-backup, разрешает LAN 10/8, 172/8, 192.168/16, DNS, NTP, Veyon, VNC и тестирующие системы, остальное блокирует",
+                        "description": "Открывает https://online.olimpiada.ru в Chromium на весь экран от имени залогиненного пользователя\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.\n\nБраузер запускается отдельным SSH-шагом с флагом «Запустить и не ждать» (background: true); задержки и последующая автоматизация выполняются с ожиданием завершения.",
+                        "iid": "5af4d4e9769247eca04fca3e455014cd",
+                        "name": "Открыть online.olimpiada.ru",
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "text": "set -e\nexport LC_ALL=C\n\n\n# ==================== НАСТРОЙКИ (редактируйте здесь) ====================\n# ЧС - сайты, которые ДОЛЖНЫ быть заблокированы\nOLYMP_BLOCKLIST=\"ya.ru vk.com google.com deepseek.com\"\n# БС - сайты тестирующей системы, которые ДОЛЖНЫ открываться\nOLYMP_HOSTS=\"online.olimpiada.ru cheops.olimpiada.ru olympiads.online school.mos.ru login.mos.ru mc.yandex.ru fonts.googleapis.com fonts.gstatic.com\"\n# Белые IP-пулы (Яндекс: поиск, капча, метрика)\nOLYMP_WL4=\"87.250.250.200 77.88.21.14 87.250.250.14 87.250.251.14 93.158.134.14 213.180.193.14 213.180.204.14 37.9.64.225 87.250.251.158 95.163.252.68\"\nOLYMP_WL6=\"2a02:6b8::360 2a02:6b8::14 2a02:6b8:23::225 2a02:6b8::3:158\"\n# Подсеть авторизации МЭШ (school.mos.ru, login.mos.ru)\nOLYMP_MESH_SUBNET=\"94.79.51.0/24\"\n# Отключение IPv6 (yes - запретить обход ЧС по v6 и таймауты на AAAA)\nOLYMP_DISABLE_IPV6=\"yes\"\n# ========================================================================\n\necho \"== Олимпиада: настройка блокировки (ufw) ==\"\nif ! command -v ufw >/dev/null 2>&1; then\n    if command -v dnf >/dev/null 2>&1; then\n        dnf install -y ufw\n    elif command -v apt-get >/dev/null 2>&1; then\n        apt-get update -qq\n        apt-get install -y ufw\n    fi\nfi\ncommand -v ufw >/dev/null 2>&1 || { echo \"ERROR: ufw не установлен\" >&2; exit 1; }\nif [ -d /run/systemd/system ] && systemctl is-active --quiet firewalld; then\n    echo \"ERROR: сначала отключите firewalld\" >&2\n    exit 1\nfi\nufw disable\nufw --force reset >/dev/null\n# Удаляем служебные копии reset и правила, добавленные шаблонами пакета.\nrm -f /etc/ufw/*.rules.[0-9]* /var/lib/ufw/*.rules.[0-9]*\nRULES=$(ufw show added)\nwhile printf '%s\\n' \"$RULES\" | grep -q '^ufw '; do\n    ufw --force delete 1 >/dev/null\n    RULES=$(ufw show added)\ndone\nif [ \"$OLYMP_DISABLE_IPV6\" = yes ]; then\n    printf '# Отключение IPv6 (олимпиада)\\nnet.ipv6.conf.all.disable_ipv6 = 1\\nnet.ipv6.conf.default.disable_ipv6 = 1\\n' > /etc/sysctl.d/99-olymp-ipv6.conf\n    sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null\n    sysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null\nfi\n\nLAN=\"10.0.0.0/8 172.0.0.0/8 192.168.0.0/16\"\nfor net in $LAN; do\nufw allow in from $net to any port 22 proto tcp comment 'olymp ssh' >/dev/null\nufw allow out from any to $net comment 'olymp lan' >/dev/null\nufw allow in from $net comment 'olymp lan' >/dev/null\nufw allow in from $net to any port 11100 proto tcp comment 'olymp veyon' >/dev/null\nufw allow in from $net to any port 11300 proto tcp comment 'olymp veyon' >/dev/null\nufw allow in from $net to any port 11400 proto tcp comment 'olymp veyon' >/dev/null\nufw allow in from $net to any port 5900:5910 proto tcp comment 'olymp vnc' >/dev/null\ndone\nufw allow in on lo comment 'olymp loopback' >/dev/null\nufw allow out on lo comment 'olymp loopback' >/dev/null\nufw allow 53 comment 'olymp dns' >/dev/null\nufw allow out 53 comment 'olymp dns' >/dev/null\nufw allow out 123/udp comment 'olymp ntp' >/dev/null\nufw allow 123/udp comment 'olymp ntp' >/dev/null\nufw allow 67,68/udp comment 'olymp dhcp' >/dev/null\nufw allow out 67,68/udp comment 'olymp dhcp' >/dev/null\nufw allow 546,547/udp comment 'olymp dhcpv6' >/dev/null\nufw allow out 546,547/udp comment 'olymp dhcpv6' >/dev/null\nufw allow 5353/udp comment 'olymp mdns' >/dev/null\nufw allow out 5353/udp comment 'olymp mdns' >/dev/null\necho \"--- Явный запрет сайтов из ЧС (IPv4 и IPv6) ---\"\nfor s in $OLYMP_BLOCKLIST; do\nBIPS=$( (getent ahostsv4 \"$s\" 2>/dev/null; getent ahostsv6 \"$s\" 2>/dev/null) | awk '{print $1}' | sort -u)\nfor ip in $BIPS; do\nufw deny out to $ip comment 'olymp blocklist' >/dev/null\necho \"Запрещен $s: $ip\"\ndone\nif [ -z \"$BIPS\" ]; then echo \"WARNING: $s не резолвится (проверьте DNS)\"; fi\ndone\necho \"--- Белые IP-пулы ---\"\nfor ip in $OLYMP_WL4; do\nufw allow out to $ip comment 'olymp whitelist' >/dev/null\ndone\nfor ip in $OLYMP_WL6; do\nufw allow out to $ip comment 'olymp whitelist' >/dev/null\ndone\necho \"Резолв зависимых хостов тестирующей системы (несколько проходов, обе семьи адресов)...\"\nfor h in $OLYMP_HOSTS; do\nHIPS=\"\"\nfor round in 1 2 3 4 5; do\nRIPS=$( (getent ahostsv4 \"$h\" 2>/dev/null; getent ahostsv6 \"$h\" 2>/dev/null) | awk '{print $1}')\nHIPS=\"$HIPS $RIPS\"\nsleep 1\ndone\nHIPS=$(echo \"$HIPS\" | tr ' ' '\n' | sort -u)\nfor ip in $HIPS; do\nufw allow out to $ip comment 'olymp test-system' >/dev/null\necho \"Разрешен $h: $ip\"\ndone\nif [ -z \"$HIPS\" ]; then echo \"WARNING: $h не резолвится (проверьте DNS)\"; fi\ndone\nufw allow out to $OLYMP_MESH_SUBNET comment 'olymp mes-auth' >/dev/null\necho \"Разрешена подсеть МЭШ $OLYMP_MESH_SUBNET (авторизация school.mos.ru/login.mos.ru)\"\nufw default deny incoming >/dev/null\nufw default deny outgoing >/dev/null\nufw --force enable\nif [ -d /run/systemd/system ]; then\n    systemctl enable --now ufw.service\n    systemctl is-active --quiet ufw.service\n    systemctl is-enabled --quiet ufw.service\nfi\niptables -S INPUT | grep -q '^-P INPUT DROP$'\niptables -S OUTPUT | grep -q '^-P OUTPUT DROP$'\necho \"== Олимпиадная блокировка включена ==\"\nufw status verbose\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Полностью сбрасывает правила ufw, затем разрешает LAN, DNS, NTP, Veyon, VNC и тестирующие системы и блокирует остальное",
                         "iid": "baad0e44fc0b427982921aea6382d0cc",
                         "name": "Настроить блокировку (ufw)",
                         "timeout": 300
@@ -4223,11 +4399,11 @@
                     {
                         "commands": [
                             {
-                                "text": "echo \"== Олимпиада: снятие блокировки (ufw) ==\"\ncommand -v ufw >/dev/null 2>&1 || { echo \"ufw не установлен, снимать нечего\"; exit 0; }\nMAP=$(mktemp)\nufw status numbered > \"$MAP\" 2>&1\nNUMS=$(grep -E \"olymp\" \"$MAP\" | grep -oE \"^\\[ *[0-9]+\\]\" | grep -oE \"[0-9]+\" | sort -rn)\nrm -f \"$MAP\"\nFIRST_DIR=$(ls -d /root/olymp-backup/*/ 2>/dev/null | sort | head -n1)\nif [ -z \"$NUMS\" ] && [ -z \"$FIRST_DIR\" ]; then\necho \"Правил olymp не найдено, бэкапов нет - снимать нечего\"\nexit 0\nfi\nfor n in $NUMS; do\necho \"Удаляю правило $n\"\necho \"y\" | ufw delete $n >/dev/null 2>&1 || ufw --force delete $n >/dev/null 2>&1 || true\ndone\necho \"Восстановление исходного состояния (первый бэкап)...\"\nif [ -n \"$FIRST_DIR\" ]; then\nDEF_LINE=$(grep -E \"^Default:\" \"$FIRST_DIR/defaults.txt\" 2>/dev/null | head -n1)\nWAS_ACTIVE=$(grep -E \"^Status:\" \"$FIRST_DIR/ufw-status.txt\" 2>/dev/null | head -n1)\nPREV_IN=$(echo \"$DEF_LINE\" | grep -oE \"[a-z]+ \\(incoming\\)\" | awk '{print $1}')\nPREV_OUT=$(echo \"$DEF_LINE\" | grep -oE \"[a-z]+ \\(outgoing\\)\" | awk '{print $1}')\nif [ -n \"$PREV_IN\" ]; then ufw default \"$PREV_IN\" incoming >/dev/null; else ufw default allow incoming >/dev/null; fi\nif [ -n \"$PREV_OUT\" ]; then ufw default \"$PREV_OUT\" outgoing >/dev/null; else ufw default allow outgoing >/dev/null; fi\necho \"Политики: incoming=${PREV_IN:-allow} outgoing=${PREV_OUT:-allow}\"\nif echo \"$WAS_ACTIVE\" | grep -q \"inactive\"; then\nufw disable >/dev/null 2>&1\necho \"ufw был неактивен до блокировки - отключен обратно\"\nelse\necho \"ufw оставлен включенным (был активен до блокировки)\"\nfi\nrm -f /etc/sysctl.d/99-olymp-ipv6.conf\nIPV6_ALL=$(cat \"$FIRST_DIR/sysctl-ipv6-all.txt\" 2>/dev/null | tail -n1)\nIPV6_DEF=$(cat \"$FIRST_DIR/sysctl-ipv6-default.txt\" 2>/dev/null | tail -n1)\nif [ \"$IPV6_ALL\" = \"0\" ]; then\necho \"Возвращаю IPv6 (был включен до блокировки)...\"\nsysctl -w net.ipv6.conf.all.disable_ipv6=0 >/dev/null 2>&1\nfor i in /sys/class/net/*; do\nsysctl -w \"net.ipv6.conf.${i##*/}.disable_ipv6=0\" >/dev/null 2>&1\ndone\nelse\necho \"IPv6 до блокировки был отключен - не трогаю\"\nfi\nif [ \"$IPV6_DEF\" = \"0\" ]; then\nsysctl -w net.ipv6.conf.default.disable_ipv6=0 >/dev/null 2>&1\nfi\nrm -rf /root/olymp-backup\necho \"Бэкапы удалены (не копятся)\"\nelse\necho \"WARNING: бэкап не найден, default-политики не тронуты (проверьте вручную)\"\necho \"NOTE: файл /etc/sysctl.d/99-olymp-ipv6.conf не удален (нет бэкапа состояния IPv6)\"\nfi\necho \"== Готово ==\"\nufw status verbose | head -n 15",
+                                "text": "set -e\nexport LC_ALL=C\n\n\necho \"== Олимпиада: снятие блокировки (ufw) ==\"\nif command -v ufw >/dev/null 2>&1; then\n    if [ -d /run/systemd/system ]; then systemctl disable --now ufw.service; fi\n    ufw disable\n    ufw --force reset >/dev/null\n    # Удаляем служебные копии reset и правила, добавленные шаблонами пакета.\n    rm -f /etc/ufw/*.rules.[0-9]* /var/lib/ufw/*.rules.[0-9]*\n    RULES=$(ufw show added)\n    while printf '%s\\n' \"$RULES\" | grep -q '^ufw '; do\n        ufw --force delete 1 >/dev/null\n        RULES=$(ufw show added)\n    done\n    ufw default allow incoming >/dev/null\n    ufw default allow outgoing >/dev/null\n    ufw status verbose\nfi\nrm -f /etc/sysctl.d/99-olymp-ipv6.conf\nfor option in /proc/sys/net/ipv6/conf/*/disable_ipv6; do\n    if [ -f \"$option\" ]; then printf '0\\n' > \"$option\"; fi\ndone\necho \"== Блокировка снята, UFW отключён, IPv6 включён ==\"\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Удаляет правила olymp из ufw, восстанавливает исходное состояние из первого бэкапа и удаляет бэкапы",
+                        "description": "Полностью сбрасывает все правила ufw, отключает его автозапуск, разрешает трафик и включает IPv6",
                         "iid": "8858b77cc15c4c76a84df5cc35c58029",
                         "name": "Снять блокировку (ufw)",
                         "timeout": 60
@@ -4255,30 +4431,6 @@
                         "iid": "63fbacb58fc147559de6336ed080cdbe",
                         "name": "Показать правила блокировки",
                         "timeout": 15
-                    },
-                    {
-                        "commands": [
-                            {
-                                "text": "# Сайт тестирующей системы (БС)\nOLYMP_URL=\"https://online.olimpiada.ru\"\nuser=$(who | head -n1 | awk '{print $1}')\nif [ -z \"$user\" ]; then echo \"ERROR: нет залогиненных пользователей\"; exit 1; fi\nsudo -u $user DISPLAY=:0 chromium-browser \"$OLYMP_URL\" --incognito --start-fullscreen 2>/dev/null &\nsleep 2\necho \"Открыт $OLYMP_URL у пользователя $user\"",
-                                "type": "ssh"
-                            }
-                        ],
-                        "description": "Открывает https://online.olimpiada.ru в Chromium на весь экран от имени залогиненного пользователя",
-                        "iid": "5af4d4e9769247eca04fca3e455014cd",
-                        "name": "Открыть online.olimpiada.ru",
-                        "timeout": 30
-                    },
-                    {
-                        "commands": [
-                            {
-                                "text": "echo \"== Олимпиада: аварийный сброс файервола ==\"\ncommand -v ufw >/dev/null 2>&1 || { echo \"ufw не установлен, сбрасывать нечего\"; exit 0; }\nrm -rf /root/olymp-backup\necho \"Бэкапы olymp удалены\"\nufw --force reset\nufw default allow incoming >/dev/null\nufw default allow outgoing >/dev/null\necho \"== Готово: все правила удалены, бэкапы удалены, трафик разрешен, ufw отключен ==\"\nufw status verbose | head -n 5",
-                                "type": "ssh"
-                            }
-                        ],
-                        "description": "Аварийный сброс: удаляет ВСЕ правила ufw, все бэкапы olymp и отключает файервол (открывает весь трафик)",
-                        "iid": "47282608bf184d87b8b891c9898a9a4d",
-                        "name": "Сбросить файервол (аварийный)",
-                        "timeout": 30
                     }
                 ]
             },
@@ -4295,19 +4447,6 @@
                         "iid": "d62be9e040ee4cfb863d0d2350c6ff39",
                         "name": "rosa-iso-info",
                         "timeout": 10
-                    },
-                    {
-                        "commands": [
-                            {
-                                "text": "if ! command -v wakeonlan &> /dev/null; then\n    dnf install -y wakeonlan\nfi\nwakeonlan %mac%",
-                                "type": "local"
-                            }
-                        ],
-                        "description": "Отправляет Magic Packet для удалённого включения компьютера по сети",
-                        "iid": "bd7be19c80b348ed8e988d5fb848858c",
-                        "name": "Wake on LAN",
-                        "params": [],
-                        "timeout": 30
                     }
                 ]
             },
@@ -4438,9 +4577,25 @@
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Загрузиться в Киоск и запустить сайт",
+                        "description": "Загрузиться в Киоск и запустить сайт\n\nСоседний автоматический вариант: «Запуск в текущем сеансе (автоопределение пользователя)».",
                         "iid": "a2b89fd09b29430c9c78e2adcc03f4ae",
                         "name": "Перелог в киоск и запуск",
+                        "params": [
+                            "Сайт"
+                        ],
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "desktop_session": true,
+                                "text": "sleep 5\nSITE=\"%param1%\"\nxdotool key Tab Tab Tab Tab\nxdotool type --delay 40 \"$SITE\"\nxdotool key Return\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Загрузиться в Киоск и запустить сайт\n\nТолько вводит адрес сайта в текущем сеансе; автологин не изменяется, SDDM не перезапускается. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
+                        "iid": "70826f50d69d448a82e9d45c0cc2e83b",
+                        "name": "Запуск в текущем сеансе (автоопределение пользователя)",
                         "params": [
                             "Сайт"
                         ],
@@ -4481,11 +4636,16 @@
                     {
                         "commands": [
                             {
-                                "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u \"$user\" DISPLAY=:0 SITE=\"%param1%\" bash -c '\nread W H <<< $(xdotool getdisplaygeometry)\nxdotool mousemove $((W/2)) $((H/2)) click 1\nxdotool key Tab Tab Tab Tab\nxdotool type --delay 40 \"$SITE\"\nxdotool key Return\n'\n",
+                                "text": "if ! command -v xdotool >/dev/null 2>&1; then\n    dnf install -y xdotool || exit $?\nfi\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "SITE=\"%param1%\"\nread W H <<< $(xdotool getdisplaygeometry)\nxdotool mousemove $((W/2)) $((H/2)) click 1\nxdotool key Tab Tab Tab Tab\nxdotool type --delay 40 \"$SITE\"\nxdotool key Return\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Запуск сайта для МЦКО",
+                        "description": "Запуск сайта для МЦКО\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
                         "iid": "2f81b2c72b14454cb03e4c7acf80abd8",
                         "name": "kiosk-run-site",
                         "params": [
@@ -4496,11 +4656,16 @@
                     {
                         "commands": [
                             {
-                                "text": "if ! command -v xdotool &> /dev/null; then\n    dnf install -y xdotool\nfi\nuser=$(who | head -n1 | awk '{print $1}')\nsudo -u \"$user\" DISPLAY=:0 LOGIN=\"%param1%\" PASSWORD=\"%param2%\" bash -c '\nread W H <<< $(xdotool getdisplaygeometry)\nxdotool mousemove $((W/2)) $((H/2)) click 1\nxdotool key Tab\nxdotool type --delay 40 \"$LOGIN\"\nxdotool key Tab\nxdotool type --delay 40 \"$PASSWORD\"\nxdotool key Return\nxdotool sleep 2\nxdotool key Tab Return\n'\n",
+                                "text": "if ! command -v xdotool >/dev/null 2>&1; then\n    dnf install -y xdotool || exit $?\nfi\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "LOGIN=\"%param1%\" PASSWORD=\"%param2%\"\nread W H <<< $(xdotool getdisplaygeometry)\nxdotool mousemove $((W/2)) $((H/2)) click 1\nxdotool key Tab\nxdotool type --delay 40 \"$LOGIN\"\nxdotool key Tab\nxdotool type --delay 40 \"$PASSWORD\"\nxdotool key Return\nxdotool sleep 2\nxdotool key Tab Return\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Запуск сайта для МЦКО",
+                        "description": "Запуск сайта для МЦКО\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.",
                         "iid": "cad2be85b270433caa1d4871f024c114",
                         "name": "Нагрузочное (запуск)",
                         "params": [
@@ -4533,11 +4698,33 @@
                     {
                         "commands": [
                             {
-                                "text": "session=$(\n    loginctl list-sessions --no-legend |\n    awk '$3 != \"gdm\" && $3 != \"\" {print $1; exit}'\n)\n\nif [ -n \"$session\" ]; then\n    user=$(loginctl show-session \"$session\" -p Name --value)\n    display=$(loginctl show-session \"$session\" -p Display --value)\n    authority=\"/home/$user/.Xauthority\"\nfi\n\n[ -z \"$user\" ] && user=\"localadmin\"\n[ -z \"$display\" ] && display=\":0\"\n\nsite=\"%param1%\"\nsudo -u $user DISPLAY=:0 XAUTHORITY=$authority bash -c \"mwts-browser \\\"https://$site\\\" > /dev/null 2>&1 &\"",
+                                "background": false,
+                                "desktop_session": false,
+                                "text": "dnf --refresh makecache\ndnf up -y mwts-*",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Открыть произвольный сайт",
+                        "description": "",
+                        "iid": "7bca41b0a8954b0daf998dd8980adbef",
+                        "name": "Обновление",
+                        "params": [],
+                        "timeout": 30
+                    },
+                    {
+                        "commands": [
+                            {
+                                "background": true,
+                                "desktop_session": true,
+                                "text": "site=\"%param1%\"\nsite=\"${site#http://}\"\nsite=\"${site#https://}\"\nmwts-browser \"https://$site\"\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "# Даём браузеру 2 секунды на старт до закрытия SSH-сессии\nsleep 2\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Открыть произвольный сайт\n\nАвтоматическое определение пользователя. Требуется единственный активный локальный графический сеанс; при отсутствии или неоднозначности сеанса выполнение останавливается штатным механизмом. Пользовательские SSH-шаги выполняются от владельца этого сеанса в его окружении.\n\nБраузер запускается отдельным SSH-шагом с флагом «Запустить и не ждать» (background: true); задержки и последующая автоматизация выполняются с ожиданием завершения.",
                         "iid": "4ad54389a9084bca82490ff761a3df00",
                         "name": "Открыть сайт",
                         "params": [
@@ -4548,11 +4735,24 @@
                     {
                         "commands": [
                             {
-                                "text": "if ! command -v xdotool &>/dev/null; then\n    dnf install -y xdotool\nfi\n\ndomain=\"%param1%\"\nlogin=\"%param2%\"\npassword=\"%param3%\"\n\nsession=$(\n    loginctl list-sessions --no-legend |\n    awk '$3 != \"gdm\" && $3 != \"\" {print $1; exit}'\n)\n\nif [ -n \"$session\" ]; then\n    user=$(loginctl show-session \"$session\" -p Name --value)\n    display=$(loginctl show-session \"$session\" -p Display --value)\n    authority=\"/home/$user/.Xauthority\"\nfi\n\n[ -z \"$user\" ] && user=\"localadmin\"\n[ -z \"$display\" ] && display=\":0\"\n\nuid=$(id -u \"$user\")\n\nurl=\"http://$domain.mcko.ru/test/?template=17664\"\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    mwts-browser \"$url\" > /dev/null 2>&1 &\n\nsleep 5\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XAUTHORITY=$authority \\\n    LOGIN_VALUE=\"$login\" \\\n    PASSWORD_VALUE=\"$password\" \\\n    bash -c '\n        window=$(xdotool getactivewindow 2>/dev/null)\n\n        if [ -n \"$window\" ]; then\n            xdotool getwindowname \"$window\" 2>/dev/null || true\n            xdotool windowactivate --sync \"$window\"\n        fi\n\n        read -r W H <<< \"$(xdotool getdisplaygeometry)\"\n\n        X=$((W / 2))\n        Y=$((H / 4))\n\n        xdotool mousemove \"$X\" \"$Y\" click 1\n        sleep 0.5\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.3\n\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$LOGIN_VALUE\"\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$PASSWORD_VALUE\"\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        sleep 3\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n    '",
+                                "background": false,
+                                "desktop_session": false,
+                                "text": "# Проверяем наличие утилиты управления и устанавливаем при отсутствии\n\nif ! command -v xdotool >/dev/null 2>&1; then\n    dnf install -y xdotool || exit $?\nfi\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "background": true,
+                                "desktop_session": true,
+                                "text": "domain='%param1%'\n\ndomain=\"${site#http://}\"\ndomain=\"${site#https://}\"\n\nlogin=\"%param2%\"\npassword=\"%param3%\"\n\nurl=\"https://$domain.mcko.ru/test/?login=$login&password=$password\"\n\nmwts-browser \"$url\"\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "desktop_session": true,
+                                "text": "login='%param2%'\npassword='%param3%'\nLOGIN_VALUE=\"$login\"\nPASSWORD_VALUE=\"$password\"\n# Ждём появления окна браузера (до 10 секунд) вместо слепого sleep 5\nfor _ in {1..20}; do\n    window=$(xdotool search --onlyvisible --name \"mcko|МЦКО|mwts|Browser\" 2>/dev/null | tail -n 1)\n    [ -z \"$window\" ] && window=$(xdotool getactivewindow 2>/dev/null)\n    if [ -n \"$window\" ]; then\n        break\n    fi\n    sleep 0.5\ndone\n\n# Даём странице время догрузить форму входа\nsleep 3\n\nif [ -n \"$window\" ]; then\n    xdotool windowactivate --sync \"$window\" 2>/dev/null || true\nfi\n\n# Переключаем раскладку на первой группе (обычно US), чтобы сработали ctrl+a и ввод символов\nsetxkbmap -layout us,ru 2>/dev/null || true\n\nread -r W H <<< \"$(xdotool getdisplaygeometry)\"\nX=$((W / 2))\nY=$((H / 4))\n\nxdotool mousemove \"$X\" \"$Y\" click 1\nsleep 0.5\n\nxdotool key --clearmodifiers Tab\nsleep 0.3\n\nxdotool key --clearmodifiers ctrl+a\nxdotool type --clearmodifiers --delay 20 -- \"$LOGIN_VALUE\"\n\nxdotool key --clearmodifiers Tab\nsleep 0.2\nxdotool key --clearmodifiers ctrl+a\nxdotool type --clearmodifiers --delay 20 -- \"$PASSWORD_VALUE\"\n\nxdotool key --clearmodifiers Tab\nsleep 0.2\nxdotool key --clearmodifiers Return\n\nsleep 3\n\nxdotool key --clearmodifiers Tab\nsleep 0.2\nxdotool key --clearmodifiers Return\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "Открыть сайт для Нагрузочного тестирования",
+                        "description": "Запуск нагрузочного тестирования в окружении пользователя",
                         "iid": "bef3d78b9b7c4f95bb07c6bcda8ab0d3",
                         "name": "Нагрузочное тестирование",
                         "params": [
@@ -4565,30 +4765,28 @@
                     {
                         "commands": [
                             {
-                                "text": "if ! command -v xdotool &>/dev/null; then\n    dnf install -y xdotool\nfi\n\ndomain=\"diagXXX\"\nlogin=\"YYYY\"\npassword=\"ZZZZZZ\"\n\nsession=$(\n    loginctl list-sessions --no-legend |\n    awk '$3 != \"gdm\" && $3 != \"\" {print $1; exit}'\n)\n\nif [ -n \"$session\" ]; then\n    user=$(loginctl show-session \"$session\" -p Name --value)\n    display=$(loginctl show-session \"$session\" -p Display --value)\n    authority=\"/home/$user/.Xauthority\"\nfi\n\n[ -z \"$user\" ] && user=\"localadmin\"\n[ -z \"$display\" ] && display=\":0\"\n\nuid=$(id -u \"$user\")\n\nurl=\"http://$domain.mcko.ru/test/?template=17664\"\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XAUTHORITY=$authority \\\n    mwts-browser \"$url\" > /dev/null 2>&1 &\n\nsleep 5\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XAUTHORITY=$authority \\\n    LOGIN_VALUE=\"$login\" \\\n    PASSWORD_VALUE=\"$password\" \\\n    bash -c '\n        window=$(xdotool getactivewindow 2>/dev/null)\n\n        if [ -n \"$window\" ]; then\n            xdotool getwindowname \"$window\" 2>/dev/null || true\n            xdotool windowactivate --sync \"$window\"\n        fi\n\n        read -r W H <<< \"$(xdotool getdisplaygeometry)\"\n\n        X=$((W / 2))\n        Y=$((H / 4))\n\n        xdotool mousemove \"$X\" \"$Y\" click 1\n        sleep 0.5\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.3\n\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$LOGIN_VALUE\"\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$PASSWORD_VALUE\"\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        sleep 3\n\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n    '",
+                                "background": false,
+                                "desktop_session": false,
+                                "text": "# Проверяем наличие утилиты управления и устанавливаем при отсутствии\n\nif ! command -v xdotool >/dev/null 2>&1; then\n    dnf install -y xdotool || exit $?\nfi\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "background": true,
+                                "desktop_session": true,
+                                "text": "# УКАЗАТЬ СВОИ ДАННЫЕ!!!\n\ndomain='XXXdiagXXX'\nlogin='YYYY'\npassword='ZZZZZZ'\n\nurl=url=\"http://$domain.mcko.ru/test/?login=$login&password=$password\"\n\nmwts-browser --start-maximized \"$url\"\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "background": false,
+                                "desktop_session": true,
+                                "text": "sleep 5\n\nwindow=$(xdotool getactivewindow 2>/dev/null)\n\nif [ -n \"$window\" ]; then\n    xdotool windowactivate --sync \"$window\" 2>/dev/null || true\nfi\n\nsetxkbmap -layout us,ru 2>/dev/null || true\n\nread -r W H <<< \"$(xdotool getdisplaygeometry)\"\n\nX=$((W / 2))\nY=$((H / 4))\n\nxdotool mousemove \"$X\" \"$Y\" click 1\nsleep 0.5\n\nxdotool key --clearmodifiers Tab\nsleep 0.3\nxdotool key --clearmodifiers Return\n\nsleep 3\n\nxdotool key --clearmodifiers Tab\nsleep 0.2\nxdotool key --clearmodifiers Return\n",
                                 "type": "ssh"
                             }
                         ],
-                        "description": "ЗАМЕНИТЬ ДАННЫЕ ДЛЯ ВХОДА НА СВОИ",
+                        "description": "Запуск Нагрузочного тестировния без ввода параметров. Их необходимо явно указать в тексте команды",
                         "iid": "36240e92aa0f40e0966603d8339192b5",
                         "name": "Нагрузочное-авто",
                         "params": [],
-                        "timeout": 60
-                    },
-                    {
-                        "commands": [
-                            {
-                                "text": "if ! command -v xdotool &>/dev/null; then\n    dnf install -y xdotool\nfi\n\ndomain=\"diag010\"\nlogin=\"%param1%\"\npassword=\"%param2%\"\n\nsession=$(\n    loginctl list-sessions --no-legend |\n    awk '$3 != \"gdm\" && $3 != \"\" {print $1; exit}'\n)\n\nif [ -n \"$session\" ]; then\n    user=$(loginctl show-session \"$session\" -p Name --value)\n    display=$(loginctl show-session \"$session\" -p Display --value)\n    authority=\"/home/$user/.Xauthority\"\nfi\n\n[ -z \"$user\" ] && user=\"localadmin\"\n[ -z \"$display\" ] && display=\":0\"\n\nuid=$(id -u \"$user\")\n\nurl=\"http://$domain.mcko.ru/test/?template=17664\"\n\necho \"Пользователь: $user\"\necho \"Display: $display\"\necho \"Логин теста: $login\"\n\nrm -f /tmp/mwts-browser.log\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XAUTHORITY=$authority \\\n    XDG_RUNTIME_DIR=\"/run/user/$uid\" \\\n    DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$uid/bus\" \\\n    QTWEBENGINE_CHROMIUM_FLAGS=\"--disable-gpu --disable-gpu-compositing --disable-gpu-rasterization --disable-zero-copy\" \\\n    QT_QUICK_BACKEND=\"software\" \\\n    LIBGL_ALWAYS_SOFTWARE=1 \\\n    setsid mwts-browser \"$url\" \\\n    >/tmp/mwts-browser.log 2>&1 </dev/null &\n\necho \"mwts-browser запущен\"\n\nsleep 3\n\nsudo -u \"$user\" env \\\n    DISPLAY=\"$display\" \\\n    XAUTHORITY=$authority \\\n    XDG_RUNTIME_DIR=\"/run/user/$uid\" \\\n    DBUS_SESSION_BUS_ADDRESS=\"unix:path=/run/user/$uid/bus\" \\\n    LOGIN_VALUE=\"$login\" \\\n    PASSWORD_VALUE=\"$password\" \\\n    bash -c '\n        window=$(xdotool getactivewindow 2>/dev/null)\n\n        echo \"Активное окно: $window\"\n\n        if [ -n \"$window\" ]; then\n            echo -n \"Название окна: \"\n            xdotool getwindowname \"$window\" 2>/dev/null || true\n            xdotool windowactivate --sync \"$window\"\n        fi\n\n        read -r W H <<< \"$(xdotool getdisplaygeometry)\"\n\n        X=$((W / 2))\n        Y=$((H / 4))\n\n        echo \"Экран: ${W}x${H}\"\n\n        echo \"Фокус на странице\"\n        xdotool mousemove \"$X\" \"$Y\" click 1\n        sleep 0.5\n\n        echo \"Переход к логину\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.3\n\n        echo \"Ввод логина\"\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$LOGIN_VALUE\"\n\n        echo \"Ввод пароля\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers ctrl+a\n        xdotool type --clearmodifiers --delay 20 \"$PASSWORD_VALUE\"\n\n        echo \"Отправка формы\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        sleep 3\n\n        echo \"Подтверждение следующего экрана\"\n        xdotool key --clearmodifiers Tab\n        sleep 0.2\n        xdotool key --clearmodifiers Return\n\n        echo \"Автоматизация завершена\"\n    '\n\necho \"Последние сообщения mwts-browser:\"\n\ngrep -vE \\\n    'dri3 extension not supported|libva error|CreateCommandBuffer' \\\n    /tmp/mwts-browser.log |\ntail -n 10\n\necho \"Готово\"",
-                                "type": "ssh"
-                            }
-                        ],
-                        "description": "",
-                        "iid": "3dd89a59b0c54407aaaa56f58dd24da6",
-                        "name": "Нагрузочное тестирование (Дебаг)",
-                        "params": [
-                            "Логин",
-                            "Пароль"
-                        ],
                         "timeout": 60
                     },
                     {
