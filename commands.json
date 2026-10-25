@@ -4835,8 +4835,8 @@
     {
         "commands": [
             {
-                "background": true,
-                "desktop_session": true,
+                "background": false,
+                "desktop_session": false,
                 "text": "%param1%",
                 "type": "ssh"
             }
