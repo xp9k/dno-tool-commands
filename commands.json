@@ -4743,7 +4743,7 @@
                             {
                                 "background": true,
                                 "desktop_session": true,
-                                "text": "domain='%param1%'\n\ndomain=\"${site#http://}\"\ndomain=\"${site#https://}\"\n\nlogin=\"%param2%\"\npassword=\"%param3%\"\n\nurl=\"https://$domain.mcko.ru/test/?login=$login&password=$password\"\n\nmwts-browser \"$url\"\n",
+                                "text": "domain='%param1%'\n\ndomain=\"${domain#http://}\"\ndomain=\"${domain#https://}\"\n\nlogin=\"%param2%\"\npassword=\"%param3%\"\n\nurl=\"https://$domain.mcko.ru/test/?login=$login&password=$password\"\n\necho \"$url\"\n\nmwts-browser \"$url\"\n",
                                 "type": "ssh"
                             },
                             {
@@ -4835,6 +4835,8 @@
     {
         "commands": [
             {
+                "background": true,
+                "desktop_session": true,
                 "text": "%param1%",
                 "type": "ssh"
             }
