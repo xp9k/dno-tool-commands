@@ -4818,7 +4818,9 @@
                     {
                         "commands": [
                             {
-                                "text": "nft flush ruleset\nrm -rf /etc/nftables/mwts-armed-nftable.conf\ntruncate -s 0 /etc/sysconfig/nftables.conf\nsystemctl restart nftables",
+                                "background": false,
+                                "desktop_session": false,
+                                "text": "systemctl disable --now mwts-daemon.service nftables.service 2>/dev/null || true\n\nnft flush ruleset\n\nrm -rf /etc/nftables /etc/nftables.conf.d\nrm -f /etc/nftables.conf /etc/sysconfig/nftables.conf\nrm -f /run/udev/rules.d/mwts-block-usb.rules\n\nudevadm control --reload-rules\nudevadm trigger\nsystemctl daemon-reload",
                                 "type": "ssh"
                             }
                         ],
