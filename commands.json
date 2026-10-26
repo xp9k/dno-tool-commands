@@ -4708,7 +4708,7 @@
                         "iid": "7bca41b0a8954b0daf998dd8980adbef",
                         "name": "Обновление",
                         "params": [],
-                        "timeout": 30
+                        "timeout": 60
                     },
                     {
                         "commands": [
@@ -4755,6 +4755,37 @@
                         "description": "Запуск нагрузочного тестирования в окружении пользователя",
                         "iid": "bef3d78b9b7c4f95bb07c6bcda8ab0d3",
                         "name": "Нагрузочное тестирование",
+                        "params": [
+                            "Домен (без mcko.ru)",
+                            "Логин",
+                            "Пароль"
+                        ],
+                        "timeout": 60
+                    },
+                    {
+                        "commands": [
+                            {
+                                "background": false,
+                                "desktop_session": false,
+                                "text": "# Проверяем наличие утилиты управления и устанавливаем при отсутствии\n\nif ! command -v xdotool >/dev/null 2>&1; then\n    dnf install -y xdotool || exit $?\nfi\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "background": true,
+                                "desktop_session": true,
+                                "text": "domain='%param1%'\n\ndomain=\"${domain#http://}\"\ndomain=\"${domain#https://}\"\n\nlogin=\"%param2%\"\npassword=\"%param3%\"\n\nurl=\"https://$domain.mcko.ru/test/?login=$login&password=$password\"\n\necho \"$url\"\n\nmwts-browser \"$url\"\n",
+                                "type": "ssh"
+                            },
+                            {
+                                "background": false,
+                                "desktop_session": true,
+                                "text": "login='%param2%'\npassword='%param3%'\nLOGIN_VALUE=\"$login\"\nPASSWORD_VALUE=\"$password\"\n# Ждём появления окна браузера (до 10 секунд) вместо слепого sleep 5\nfor _ in {1..20}; do\n    window=$(xdotool search --onlyvisible --name \"mcko|МЦКО|mwts|Browser\" 2>/dev/null | tail -n 1)\n    [ -z \"$window\" ] && window=$(xdotool getactivewindow 2>/dev/null)\n    if [ -n \"$window\" ]; then\n        break\n    fi\n    sleep 0.5\ndone\n\n# Даём странице время догрузить форму входа\nsleep 3\n\nif [ -n \"$window\" ]; then\n    xdotool windowactivate --sync \"$window\" 2>/dev/null || true\nfi\n\n# Переключаем раскладку на первой группе (обычно US), чтобы сработали ctrl+a и ввод символов\nsetxkbmap -layout us,ru 2>/dev/null || true\n\nread -r W H <<< \"$(xdotool getdisplaygeometry)\"\nX=$((W / 2))\nY=$((H / 4))\n\nxdotool mousemove \"$X\" \"$Y\" click 1\nsleep 0.2\n\nxdotool key --clearmodifiers Tab\nsleep 0.2\nxdotool key --clearmodifiers Return\n\nsleep 1\n\nxdotool key --clearmodifiers Tab\nsleep 0.2\nxdotool key --clearmodifiers Return\n\nsleep 3\n\nxdotool key --clearmodifiers Tab\nsleep 0.2\nxdotool key --clearmodifiers Return\n",
+                                "type": "ssh"
+                            }
+                        ],
+                        "description": "Запуск нагрузочного тестирования в окружении пользователя",
+                        "iid": "c4f44b8b6f544c3681c341e655796941",
+                        "name": "Нагрузочное тестирование (Если выбор педмета)",
                         "params": [
                             "Домен (без mcko.ru)",
                             "Логин",
